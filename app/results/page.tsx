@@ -41,8 +41,8 @@ export default function ResultsPage() {
       {/* Header */}
       <div className="bg-gradient-to-r from-brand-700 via-brand-600 to-purple-700 text-white">
         <div className="max-w-2xl mx-auto px-4 py-10 text-center">
-          <p className="text-brand-200 text-sm font-semibold uppercase tracking-widest mb-2">
-            ✨ Church Talent Show ✨
+          <p className="text-brand-300 text-sm font-semibold uppercase tracking-widest mb-2">
+            ✨ Adventist Youth Talented Show ✨
           </p>
           <h1 className="text-3xl sm:text-4xl font-extrabold mb-2">Live Leaderboard</h1>
           <div className="mt-4 inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-5 py-2 text-sm font-medium">
