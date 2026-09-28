@@ -101,12 +101,12 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
 
   return (
     <div
-      className={`card flex flex-col overflow-hidden transition-transform duration-200 hover:-translate-y-1 hover:shadow-md ${
-        status === "voted" ? "ring-2 ring-green-400" : ""
+      className={`card flex flex-col overflow-hidden transition-transform duration-200 hover:-translate-y-1 hover:shadow-xl ${
+        status === "voted" ? "ring-2 ring-green-400" : "hover:ring-1 hover:ring-brand-400/50"
       }`}
     >
       {/* Photo */}
-      <div className="aspect-square bg-gradient-to-br from-brand-100 to-purple-100 flex items-center justify-center overflow-hidden relative">
+      <div className="aspect-square bg-gradient-to-br from-navy-700 to-navy-900 flex items-center justify-center overflow-hidden relative">
         {contestant.photoUrl ? (
           <Image
             src={contestant.photoUrl}
@@ -129,13 +129,13 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
 
       {/* Info */}
       <div className="p-3 flex flex-col gap-1 flex-1">
-        <h3 className="font-bold text-gray-900 text-sm leading-tight line-clamp-1">
+        <h3 className="font-bold text-white text-sm leading-tight line-clamp-1">
           {contestant.name}
         </h3>
         {contestant.act && (
-          <p className="text-xs text-brand-600 font-medium truncate">{contestant.act}</p>
+          <p className="text-xs text-brand-400 font-medium truncate">{contestant.act}</p>
         )}
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-white/40">
           {votes} {votes === 1 ? "vote" : "votes"}
         </p>
 
@@ -143,22 +143,22 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
         {status === "picker" && (
           <form onSubmit={handlePay} className="mt-2 flex flex-col gap-2">
             {/* Quantity row */}
-            <div className="flex items-center justify-between bg-gray-50 rounded-xl px-2 py-1.5">
+            <div className="flex items-center justify-between bg-navy-900/50 rounded-xl px-2 py-1.5">
               <button
                 type="button"
                 onClick={decrement}
-                className="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-700 font-bold text-lg flex items-center justify-center hover:bg-gray-100 transition active:scale-95"
+                className="w-8 h-8 rounded-lg bg-white/10 border border-white/20 text-white font-bold text-lg flex items-center justify-center hover:bg-brand-400/20 transition active:scale-95"
               >
                 −
               </button>
               <div className="text-center">
-                <p className="text-lg font-extrabold text-brand-700">{quantity}</p>
-                <p className="text-xs text-gray-400">vote{quantity > 1 ? "s" : ""}</p>
+                <p className="text-lg font-extrabold text-brand-400">{quantity}</p>
+                <p className="text-xs text-white/40">vote{quantity > 1 ? "s" : ""}</p>
               </div>
               <button
                 type="button"
                 onClick={increment}
-                className="w-8 h-8 rounded-lg bg-white border border-gray-200 text-gray-700 font-bold text-lg flex items-center justify-center hover:bg-gray-100 transition active:scale-95"
+                className="w-8 h-8 rounded-lg bg-white/10 border border-white/20 text-white font-bold text-lg flex items-center justify-center hover:bg-brand-400/20 transition active:scale-95"
               >
                 +
               </button>
@@ -166,8 +166,8 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
 
             {/* Total cost */}
             <div className="flex items-center justify-between px-1">
-              <span className="text-xs text-gray-500">Total cost</span>
-              <span className="text-sm font-extrabold text-brand-700">
+              <span className="text-xs text-white/50">Total cost</span>
+              <span className="text-sm font-extrabold text-brand-400">
                 GHS {total}.00
               </span>
             </div>
@@ -178,14 +178,14 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
             <div className="flex gap-1.5">
               <button
                 type="submit"
-                className="flex-1 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-xl py-2 transition active:scale-95"
+                className="flex-1 bg-brand-500 hover:bg-brand-400 text-navy-900 text-xs font-semibold rounded-xl py-2 transition active:scale-95"
               >
                 Pay GHS {total}.00
               </button>
               <button
                 type="button"
                 onClick={() => setStatus("idle")}
-                className="px-2 text-xs text-gray-400 hover:text-gray-600 border border-gray-200 rounded-xl"
+                className="px-2 text-xs text-white/40 hover:text-white border border-white/20 rounded-xl"
               >
                 ✕
               </button>
@@ -198,14 +198,14 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
           <button
             onClick={handleVoteClick}
             disabled={status === "paying" || status === "voted"}
-            className={`mt-2 rounded-xl py-2 text-sm font-semibold text-white transition-all duration-150 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed ${
+            className={`mt-2 rounded-xl py-2 text-sm font-semibold transition-all duration-150 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed ${
               status === "voted"
-                ? "bg-green-500"
+                ? "bg-green-500 text-white"
                 : status === "error"
-                ? "bg-red-500"
+                ? "bg-red-500 text-white"
                 : status === "paying"
-                ? "bg-brand-400"
-                : "bg-brand-600 hover:bg-brand-700"
+                ? "bg-brand-400/50 text-navy-900"
+                : "bg-brand-500 hover:bg-brand-400 text-navy-900"
             }`}
           >
             {status === "voted"
