@@ -176,7 +176,7 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
             <div className="flex gap-1.5">
               <button
                 type="submit"
-                className="flex-1 bg-brand-500 hover:bg-brand-400 text-navy-900 text-xs font-bold rounded-xl py-2 transition active:scale-95"
+                className="flex-1 bg-yellow-400 hover:bg-yellow-300 text-gray-900 text-xs font-bold rounded-xl py-2 transition active:scale-95"
               >
                 Pay GHS {total}.00
               </button>
@@ -202,8 +202,8 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
                 : status === "error"
                 ? "bg-red-500 text-white"
                 : status === "paying"
-                ? "bg-brand-400/50 text-navy-900"
-                : "bg-brand-500 hover:bg-brand-400 text-navy-900"
+                ? "bg-yellow-400/50 text-gray-900"
+                : "bg-yellow-400 hover:bg-yellow-300 text-gray-900"
             }`}
           >
             {status === "voted"
