@@ -20,7 +20,7 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
   const [errorMsg, setErrorMsg] = useState("");
 
   const initial = contestant.name.charAt(0).toUpperCase();
-  const total = quantity * 1; // GHS 1 per vote
+  const total = quantity;
 
   function handleVoteClick() {
     if (status !== "idle") return;
@@ -29,13 +29,8 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
     setStatus("picker");
   }
 
-  function decrement() {
-    setQuantity((q) => Math.max(1, q - 1));
-  }
-
-  function increment() {
-    setQuantity((q) => Math.min(50, q + 1));
-  }
+  function decrement() { setQuantity((q) => Math.max(1, q - 1)); }
+  function increment() { setQuantity((q) => Math.min(50, q + 1)); }
 
   async function handlePay(e: React.FormEvent) {
     e.preventDefault();
@@ -43,51 +38,59 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
     setErrorMsg("");
 
     try {
+      // Step 1: get a reference from our server
       const initRes = await fetch("/api/payment/initialize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contestantId: contestant.id,
-          email: "votes@churchtalentshow.com",
           quantity,
         }),
       });
       const initData = await initRes.json();
 
-      if (!initRes.ok || !initData.authorization_url) {
-        console.error("Init failed:", initData);
+      if (!initRes.ok) {
         throw new Error(initData.error || "Could not start payment");
       }
 
+      // Step 2: make sure Paystack script is loaded
       await loadPaystackScript();
 
+      // Step 3: open Paystack popup — callback must NOT be async
       const handler = (window as any).PaystackPop.setup({
         key: PAYSTACK_PUBLIC_KEY,
         email: "votes@churchtalentshow.com",
-        amount: quantity * 100, // pesewas
+        amount: quantity * 100,
         currency: "GHS",
         ref: initData.reference,
         label: `${quantity} vote${quantity > 1 ? "s" : ""} for ${contestant.name}`,
-        onClose: () => {
+        onClose: function () {
           setStatus("picker");
         },
-        callback: async (response: { reference: string }) => {
-          const verifyRes = await fetch("/api/payment/verify", {
+        callback: function (response: { reference: string }) {
+          // Verify payment — use promise chain (no async/await here)
+          fetch("/api/payment/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ reference: response.reference }),
-          });
-          const verifyData = await verifyRes.json();
-
-          if (verifyRes.ok && verifyData.ok) {
-            setVotes(verifyData.votes);
-            setStatus("voted");
-            setTimeout(() => setStatus("idle"), 4000);
-          } else {
-            setErrorMsg(verifyData.error || "Payment went through but vote failed.");
-            setStatus("error");
-            setTimeout(() => setStatus("idle"), 3000);
-          }
+          })
+            .then((r) => r.json())
+            .then((data) => {
+              if (data.ok) {
+                setVotes(data.votes);
+                setStatus("voted");
+                setTimeout(() => setStatus("idle"), 4000);
+              } else {
+                setErrorMsg(data.error || "Vote failed after payment.");
+                setStatus("error");
+                setTimeout(() => setStatus("picker"), 3000);
+              }
+            })
+            .catch(() => {
+              setErrorMsg("Vote failed after payment. Contact admin.");
+              setStatus("error");
+              setTimeout(() => setStatus("picker"), 3000);
+            });
         },
       });
 
@@ -139,10 +142,9 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
           {votes} {votes === 1 ? "vote" : "votes"}
         </p>
 
-        {/* Quantity picker + payment form */}
+        {/* Quantity picker */}
         {status === "picker" && (
           <form onSubmit={handlePay} className="mt-2 flex flex-col gap-2">
-            {/* Quantity row */}
             <div className="flex items-center justify-between bg-navy-900/50 rounded-xl px-2 py-1.5">
               <button
                 type="button"
@@ -164,21 +166,17 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
               </button>
             </div>
 
-            {/* Total cost */}
             <div className="flex items-center justify-between px-1">
               <span className="text-xs text-white/50">Total cost</span>
-              <span className="text-sm font-extrabold text-brand-400">
-                GHS {total}.00
-              </span>
+              <span className="text-sm font-extrabold text-brand-400">GHS {total}.00</span>
             </div>
 
-            {errorMsg && <p className="text-xs text-red-500">{errorMsg}</p>}
+            {errorMsg && <p className="text-xs text-red-400">{errorMsg}</p>}
 
-            {/* Action buttons */}
             <div className="flex gap-1.5">
               <button
                 type="submit"
-                className="flex-1 bg-brand-500 hover:bg-brand-400 text-navy-900 text-xs font-semibold rounded-xl py-2 transition active:scale-95"
+                className="flex-1 bg-brand-500 hover:bg-brand-400 text-navy-900 text-xs font-bold rounded-xl py-2 transition active:scale-95"
               >
                 Pay GHS {total}.00
               </button>
@@ -211,7 +209,7 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
             {status === "voted"
               ? "✓ Voted!"
               : status === "paying"
-              ? "Processing…"
+              ? "Opening payment…"
               : status === "error"
               ? "Try again"
               : "Vote — GHS 1"}
@@ -222,7 +220,6 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
   );
 }
 
-// Loads Paystack inline JS once
 function loadPaystackScript(): Promise<void> {
   return new Promise((resolve, reject) => {
     if ((window as any).PaystackPop) return resolve();
@@ -236,7 +233,7 @@ function loadPaystackScript(): Promise<void> {
     script.src = "https://js.paystack.co/v1/inline.js";
     script.async = true;
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Failed to load Paystack script"));
+    script.onerror = () => reject(new Error("Failed to load Paystack"));
     document.body.appendChild(script);
   });
 }

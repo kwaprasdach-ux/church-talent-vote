@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen antialiased"
         style={{
-          backgroundImage: "url('/backdrop.png')",
+          backgroundImage: "url('/backdrop.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundAttachment: "fixed",
