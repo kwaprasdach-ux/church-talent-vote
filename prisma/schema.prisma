@@ -1,22 +1,19 @@
 // Prisma schema for the talent show voting app.
-// Default datasource is SQLite (zero setup, file-based).
-// To go to production on Vercel/etc, swap provider to "postgresql"
-// and set DATABASE_URL to your Postgres connection string
-// (e.g. a free Supabase or Neon database) — no other code changes needed.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Contestant {
   id        String   @id @default(cuid())
   name      String
-  act       String? // e.g. "Singing", "Dance", "Poetry"
+  act       String?
   photoUrl  String?
   order     Int      @default(0)
   votes     Int      @default(0)
