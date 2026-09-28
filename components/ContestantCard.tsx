@@ -14,7 +14,6 @@ type Contestant = {
 export default function ContestantCard({ contestant }: { contestant: Contestant }) {
   const [status, setStatus] = useState<"idle" | "picker" | "paying" | "voted" | "error">("idle");
   const [quantity, setQuantity] = useState(1);
-  const [email, setEmail] = useState("");
   const [votes, setVotes] = useState(contestant.votes);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -24,7 +23,6 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
   function handleVoteClick() {
     if (status !== "idle") return;
     setQuantity(1);
-    setEmail("");
     setErrorMsg("");
     setStatus("picker");
   }
@@ -39,10 +37,6 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
 
   async function handlePay(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim() || !email.includes("@")) {
-      setErrorMsg("Please enter a valid email.");
-      return;
-    }
     setStatus("paying");
     setErrorMsg("");
 
@@ -52,7 +46,7 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contestantId: contestant.id,
-          email,
+          email: "votes@churchtalentshow.com",
           quantity,
         }),
       });
@@ -66,7 +60,7 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
 
       const handler = (window as any).PaystackPop.setup({
         key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
-        email,
+        email: "votes@churchtalentshow.com",
         amount: quantity * 100, // pesewas
         currency: "GHS",
         ref: initData.reference,
@@ -174,17 +168,6 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
                 GHS {total}.00
               </span>
             </div>
-
-            {/* Email */}
-            <input
-              type="email"
-              placeholder="Email for receipt"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input text-xs py-1.5"
-              required
-              autoFocus
-            />
 
             {errorMsg && <p className="text-xs text-red-500">{errorMsg}</p>}
 
