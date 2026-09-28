@@ -11,6 +11,8 @@ type Contestant = {
   votes: number;
 };
 
+const PAYSTACK_PUBLIC_KEY = "pk_test_9fbc71ffef8a91b27d9ea23af5bb234c8a278175";
+
 export default function ContestantCard({ contestant }: { contestant: Contestant }) {
   const [status, setStatus] = useState<"idle" | "picker" | "paying" | "voted" | "error">("idle");
   const [quantity, setQuantity] = useState(1);
@@ -59,7 +61,7 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
       await loadPaystackScript();
 
       const handler = (window as any).PaystackPop.setup({
-        key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
+        key: PAYSTACK_PUBLIC_KEY,
         email: "votes@churchtalentshow.com",
         amount: quantity * 100, // pesewas
         currency: "GHS",
