@@ -1,5 +1,3 @@
-// Prisma schema for the talent show voting app.
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,6 +11,7 @@ datasource db {
 model Contestant {
   id        String   @id @default(cuid())
   name      String
+  code      String   @unique
   act       String?
   photoUrl  String?
   order     Int      @default(0)
