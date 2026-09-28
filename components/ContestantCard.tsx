@@ -55,6 +55,7 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
       const initData = await initRes.json();
 
       if (!initRes.ok || !initData.authorization_url) {
+        console.error("Init failed:", initData);
         throw new Error(initData.error || "Could not start payment");
       }
 
@@ -94,7 +95,7 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
     } catch (err: any) {
       setErrorMsg(err.message || "Something went wrong. Please try again.");
       setStatus("error");
-      setTimeout(() => setStatus("idle"), 3000);
+      setTimeout(() => setStatus("picker"), 3000);
     }
   }
 
