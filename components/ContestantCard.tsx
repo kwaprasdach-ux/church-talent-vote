@@ -63,6 +63,7 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
         amount: quantity * 100,
         currency: "GHS",
         ref: initData.reference,
+        channels: ["mobile_money"],
         label: `${quantity} vote${quantity > 1 ? "s" : ""} for ${contestant.name}`,
         onClose: function () {
           setStatus("picker");
