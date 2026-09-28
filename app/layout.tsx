@@ -29,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundAttachment: "fixed",
-          backgroundColor: "#080c3f",
+          backgroundColor: "#031a0e",
         }}
       >
         <div className="min-h-screen bg-navy-900/70 backdrop-blur-sm">
