@@ -22,14 +22,16 @@ async function verifyAndVote(reference: string) {
   }
 
   const contestantId = data.data.metadata?.contestantId;
+  const quantity = Math.max(1, Number(data.data.metadata?.quantity) || 1);
+
   if (!contestantId) {
     return { ok: false, error: "Invalid payment metadata" };
   }
 
-  // Cast the vote
+  // Cast the votes (quantity times)
   const updated = await prisma.contestant.update({
     where: { id: contestantId },
-    data: { votes: { increment: 1 } },
+    data: { votes: { increment: quantity } },
   });
 
   return { ok: true, votes: updated.votes, contestantId };

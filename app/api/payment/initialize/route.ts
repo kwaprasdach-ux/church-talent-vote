@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // POST /api/payment/initialize
-// Body: { contestantId, email }
+// Body: { contestantId, email, quantity }
 // Returns: { authorization_url, reference }
 
 export async function POST(req: NextRequest) {
-  const { contestantId, email } = await req.json();
+  const { contestantId, email, quantity = 1 } = await req.json();
 
   if (!contestantId || typeof contestantId !== "string") {
     return NextResponse.json({ error: "contestantId is required" }, { status: 400 });
@@ -15,6 +15,8 @@ export async function POST(req: NextRequest) {
   if (!email || typeof email !== "string" || !email.includes("@")) {
     return NextResponse.json({ error: "A valid email is required" }, { status: 400 });
   }
+
+  const qty = Math.max(1, Math.min(50, Number(quantity) || 1));
 
   // Confirm contestant exists
   const contestant = await prisma.contestant.findUnique({ where: { id: contestantId } });
@@ -32,21 +34,26 @@ export async function POST(req: NextRequest) {
     },
     body: JSON.stringify({
       email,
-      amount: 100, // GHS 1.00 = 100 pesewas
+      amount: qty * 100, // GHS 1 per vote in pesewas
       currency: "GHS",
       reference,
       metadata: {
         contestantId,
         contestantName: contestant.name,
+        quantity: qty,
         custom_fields: [
           {
             display_name: "Voting for",
             variable_name: "voting_for",
             value: contestant.name,
           },
+          {
+            display_name: "Number of votes",
+            variable_name: "quantity",
+            value: String(qty),
+          },
         ],
       },
-      callback_url: `${process.env.NEXT_PUBLIC_APP_URL || ""}/api/payment/verify`,
     }),
   });
 
