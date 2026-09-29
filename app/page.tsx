@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 export default function SplashPage() {
   const [show, setShow] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setShow(true), 500); return () => clearTimeout(t); }, []);
+  useEffect(() => { const t = setTimeout(() => setShow(true), 0); return () => clearTimeout(t); }, []);
   return (
     <main className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden px-4">
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
@@ -57,3 +57,4 @@ export default function SplashPage() {
     </main>
   );
 }
+
