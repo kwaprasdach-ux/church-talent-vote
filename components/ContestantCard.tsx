@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -6,6 +6,7 @@ import Image from "next/image";
 type Contestant = {
   id: string;
   name: string;
+  code?: string | null;
   act: string | null;
   photoUrl: string | null;
   votes: number;
@@ -56,7 +57,7 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
       // Step 2: make sure Paystack script is loaded
       await loadPaystackScript();
 
-      // Step 3: open Paystack popup — callback must NOT be async
+      // Step 3: open Paystack popup â€” callback must NOT be async
       const handler = (window as any).PaystackPop.setup({
         key: PAYSTACK_PUBLIC_KEY,
         email: "votes@churchtalentshow.com",
@@ -69,7 +70,7 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
           setStatus("picker");
         },
         callback: function (response: { reference: string }) {
-          // Verify payment — use promise chain (no async/await here)
+          // Verify payment â€” use promise chain (no async/await here)
           fetch("/api/payment/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -126,7 +127,7 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
         )}
         {status === "voted" && (
           <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
-            <span className="text-4xl">✅</span>
+            <span className="text-4xl">âœ…</span>
           </div>
         )}
       </div>
@@ -139,6 +140,7 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
         {contestant.act && (
           <p className="text-xs text-brand-400 font-medium truncate">{contestant.act}</p>
         )}
+        <p className="text-xs font-bold text-yellow-400/80 tracking-widest">{contestant.code}</p>
         <p className="text-xs text-white/40">
           {votes} {votes === 1 ? "vote" : "votes"}
         </p>
@@ -152,7 +154,7 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
                 onClick={decrement}
                 className="w-8 h-8 rounded-lg bg-white/10 border border-white/20 text-white font-bold text-lg flex items-center justify-center hover:bg-brand-400/20 transition active:scale-95"
               >
-                −
+                âˆ’
               </button>
               <div className="text-center">
                 <p className="text-lg font-extrabold text-brand-400">{quantity}</p>
@@ -186,7 +188,7 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
                 onClick={() => setStatus("idle")}
                 className="px-2 text-xs text-white/40 hover:text-white border border-white/20 rounded-xl"
               >
-                ✕
+                âœ•
               </button>
             </div>
           </form>
@@ -208,12 +210,12 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
             }`}
           >
             {status === "voted"
-              ? "✓ Voted!"
+              ? "âœ“ Voted!"
               : status === "paying"
-              ? "Opening payment…"
+              ? "Opening paymentâ€¦"
               : status === "error"
               ? "Try again"
-              : "Vote — GHS 1"}
+              : "Vote â€” GHS 1"}
           </button>
         )}
       </div>
@@ -238,3 +240,4 @@ function loadPaystackScript(): Promise<void> {
     document.body.appendChild(script);
   });
 }
+
