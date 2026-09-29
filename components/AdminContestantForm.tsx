@@ -1,141 +1,77 @@
-"use client";
-
-import { useState } from "react";
+﻿"use client";
+import { useState, useRef } from "react";
 import Image from "next/image";
 
-type Props = {
-  onAdded: () => void;
-};
-
-export default function AdminContestantForm({ onAdded }: Props) {
+export default function AdminContestantForm({ onAdded }: { onAdded: () => void }) {
   const [name, setName] = useState("");
-  const [act, setAct] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  const ACT_PRESETS = ["Singing", "Dancing", "Poetry", "Comedy", "Instrument", "Drama", "Other"];
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    setUploading(false);
+    if (res.ok) { const d = await res.json(); setPhotoUrl(d.url); }
+    else { setError("Photo upload failed. Try again."); }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
-    setSubmitting(true);
-    setError("");
-    setSuccess("");
-
+    setSubmitting(true); setError(""); setSuccess("");
     const res = await fetch("/api/contestants", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim(), act: act.trim(), photoUrl: photoUrl.trim() }),
+      body: JSON.stringify({ name: name.trim(), act: null, photoUrl: photoUrl || null }),
     });
-
     setSubmitting(false);
-
     if (res.ok) {
-      setName("");
-      setAct("");
-      setPhotoUrl("");
-      setSuccess(`"${name.trim()}" has been added!`);
+      setName(""); setPhotoUrl("");
+      if (fileRef.current) fileRef.current.value = "";
+      setSuccess(name.trim() + " has been added!");
       setTimeout(() => setSuccess(""), 3000);
       onAdded();
-    } else {
-      setError("Couldn't add contestant. Please try again.");
-    }
+    } else { setError("Could not add contestant. Try again."); }
   }
 
-  const previewUrl = photoUrl.trim().startsWith("http") ? photoUrl.trim() : null;
-
   return (
-    <form onSubmit={submit} className="card p-5 space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Name */}
-        <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Full Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            placeholder="e.g. Abena Mensah"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="input"
-            required
-          />
-        </div>
-
-        {/* Act type */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Act / Category
-          </label>
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {ACT_PRESETS.map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => setAct(preset)}
-                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                  act === preset
-                    ? "bg-brand-600 text-white border-brand-600"
-                    : "bg-white text-gray-600 border-gray-200 hover:border-brand-400"
-                }`}
-              >
-                {preset}
-              </button>
-            ))}
-          </div>
-          <input
-            placeholder="Or type custom act…"
-            value={act}
-            onChange={(e) => setAct(e.target.value)}
-            className="input"
-          />
-        </div>
-
-        {/* Photo URL */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Photo URL <span className="text-gray-400 font-normal">(optional)</span>
-          </label>
-          <input
-            placeholder="https://example.com/photo.jpg"
-            value={photoUrl}
-            onChange={(e) => setPhotoUrl(e.target.value)}
-            className="input"
-            type="url"
-          />
-          {previewUrl && (
-            <div className="mt-2 w-16 h-16 rounded-xl overflow-hidden border border-gray-200 relative">
-              <Image
-                src={previewUrl}
-                alt="preview"
-                fill
-                sizes="64px"
-                className="object-cover"
-                onError={() => setPhotoUrl("")}
-              />
+    <form onSubmit={submit} className="rounded-2xl p-5 space-y-4" style={{background:"rgba(0,0,0,0.4)",border:"1px solid rgba(250,204,21,0.15)"}}>
+      <div>
+        <label className="block text-sm font-medium text-white/70 mb-1">Full Name <span className="text-red-400">*</span></label>
+        <input placeholder="e.g. Abena Mensah" value={name} onChange={(e) => setName(e.target.value)} className="input" required />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-white/70 mb-1">Photo <span className="text-white/30 font-normal">(optional)</span></label>
+        <div className="flex items-center gap-3">
+          <button type="button" onClick={() => fileRef.current?.click()}
+            className="px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-900 transition active:scale-95"
+            style={{background:"linear-gradient(90deg,#facc15,#f59e0b)"}}>
+            {uploading ? "Uploading..." : "Choose Photo"}
+          </button>
+          {photoUrl && (
+            <div className="w-12 h-12 rounded-xl overflow-hidden relative border border-yellow-400/30">
+              <Image src={photoUrl} alt="preview" fill sizes="48px" className="object-cover" />
             </div>
           )}
+          {photoUrl && <button type="button" onClick={() => { setPhotoUrl(""); if (fileRef.current) fileRef.current.value = ""; }} className="text-xs text-red-400 hover:text-red-300">Remove</button>}
         </div>
+        <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
       </div>
-
-      {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-2">
-          ⚠️ {error}
-        </p>
-      )}
-      {success && (
-        <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-xl px-4 py-2">
-          ✅ {success}
-        </p>
-      )}
-
-      <button
-        type="submit"
-        disabled={submitting || !name.trim()}
-        className="btn-primary"
-      >
-        {submitting ? "Adding…" : "Add Contestant"}
+      {error && <p className="text-sm text-red-400 bg-red-900/20 border border-red-400/20 rounded-xl px-4 py-2">{error}</p>}
+      {success && <p className="text-sm text-green-400 bg-green-900/20 border border-green-400/20 rounded-xl px-4 py-2">{success}</p>}
+      <button type="submit" disabled={submitting || !name.trim()}
+        className="px-6 py-2.5 rounded-xl font-bold text-gray-900 transition active:scale-95 disabled:opacity-50"
+        style={{background:"linear-gradient(90deg,#facc15,#f59e0b)"}}>
+        {submitting ? "Adding..." : "Add Contestant"}
       </button>
     </form>
   );
