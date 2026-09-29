@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // GET is public (voting page needs it). POST is admin-only, enforced by middleware.
@@ -25,9 +25,10 @@ export async function POST(req: NextRequest) {
       name: name.trim(),
       act: typeof act === "string" ? act.trim() : null,
       photoUrl: typeof photoUrl === "string" && photoUrl.trim() ? photoUrl.trim() : null,
-      order: count,
+      order: count, code: "ADY-" + String(count + 1).padStart(3, "0"),
     },
   });
 
   return NextResponse.json(contestant, { status: 201 });
 }
+
