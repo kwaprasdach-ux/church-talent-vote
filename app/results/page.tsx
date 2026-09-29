@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
@@ -34,7 +34,7 @@ export default function ResultsPage() {
   }, [load]);
 
   const totalVotes = contestants.reduce((sum, c) => sum + c.votes, 0);
-  const medals = ["🥇", "🥈", "🥉"];
+  const medals = ["ðŸ¥‡", "ðŸ¥ˆ", "ðŸ¥‰"];
 
   return (
     <main className="min-h-screen">
@@ -42,12 +42,12 @@ export default function ResultsPage() {
       <div className="bg-gradient-to-r from-brand-700 via-brand-600 to-purple-700 text-white">
         <div className="max-w-2xl mx-auto px-4 py-10 text-center">
           <p className="text-brand-300 text-sm font-semibold uppercase tracking-widest mb-2">
-            ✨ Adventist Youth Talented Show ✨
+            âœ¨ Adventist Youth Talented Show âœ¨
           </p>
           <h1 className="text-3xl sm:text-4xl font-extrabold mb-2">Live Leaderboard</h1>
           <div className="mt-4 inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-5 py-2 text-sm font-medium">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            {totalVotes} total {totalVotes === 1 ? "vote" : "votes"} · updates every 4s
+            {totalVotes} total {totalVotes === 1 ? "vote" : "votes"} Â· updates every 4s
           </div>
         </div>
       </div>
@@ -68,8 +68,8 @@ export default function ResultsPage() {
           </div>
         ) : contestants.length === 0 ? (
           <div className="text-center py-20">
-            <div className="text-5xl mb-3">🎤</div>
-            <p className="text-gray-500">No contestants yet — check back soon!</p>
+            <div className="text-5xl mb-3">ðŸŽ¤</div>
+            <p className="text-gray-500">No contestants yet â€” check back soon!</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -117,7 +117,7 @@ export default function ResultsPage() {
                   {/* Info + bar */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline justify-between gap-2">
-                      <p className="font-bold text-gray-900 truncate">{c.name}</p>
+                      <p className="font-bold text-white truncate">{c.name}</p>
                       <p className="text-sm font-semibold text-brand-700 shrink-0">
                         {c.votes} {c.votes === 1 ? "vote" : "votes"}
                       </p>
@@ -150,7 +150,7 @@ export default function ResultsPage() {
         {/* Footer */}
         <div className="mt-10 text-center flex items-center justify-center gap-6 text-sm text-gray-400">
           <Link href="/" className="hover:text-brand-600 transition font-medium">
-            ← Back to voting
+            â† Back to voting
           </Link>
           {lastUpdated && (
             <span>Updated {lastUpdated.toLocaleTimeString()}</span>
@@ -160,3 +160,4 @@ export default function ResultsPage() {
     </main>
   );
 }
+
