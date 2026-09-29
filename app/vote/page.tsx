@@ -9,7 +9,7 @@ export default async function VotePage() {
   return (
     <main className="min-h-screen">
       <div className="max-w-5xl mx-auto px-4 py-8 text-center">
-        <div className="flex justify-center mb-3"><Image src="/logo.png" alt="ADYOTs Logo" width={80} height={80} className="rounded-full border-4 border-yellow-400 shadow-2xl" /></div>
+        <div className="flex justify-center mb-3"><Image src="/logo.png" alt="ADYOTs Logo" width={180} height={90} className="object-contain drop-shadow-lg" /></div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-yellow-400 drop-shadow-lg">Adventist Youth Talented Show</h1>
         <p className="text-yellow-300/70 text-sm mt-1 tracking-widest uppercase">Yeretete Daakye Akandifo</p>
         <div className="mt-4 inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-yellow-400/30 rounded-full px-5 py-2 text-sm font-medium text-white">
@@ -35,3 +35,4 @@ export default async function VotePage() {
     </main>
   );
 }
+
