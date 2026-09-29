@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import AdminContestantForm from "@/components/AdminContestantForm";
 
 type Contestant = { id: string; name: string; act: string | null; photoUrl: string | null; votes: number; order: number; };
 
@@ -74,6 +75,10 @@ export default function AdminDashboard() {
           )}
         </div>
         <section>
+          <h2 className="text-base font-bold text-white mb-3">Add Contestant</h2>
+          <AdminContestantForm onAdded={load} />
+        </section>
+        <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-bold text-white flex items-center gap-2">
               Live Results
@@ -133,3 +138,4 @@ export default function AdminDashboard() {
     </main>
   );
 }
+
