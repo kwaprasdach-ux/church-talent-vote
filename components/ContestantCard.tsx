@@ -127,7 +127,7 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
         )}
         {status === "voted" && (
           <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
-            <span className="text-4xl">âœ…</span>
+            <span className="text-4xl">OK</span>
           </div>
         )}
       </div>
@@ -212,7 +212,7 @@ export default function ContestantCard({ contestant }: { contestant: Contestant 
             {status === "voted"
               ? "âœ“ Voted!"
               : status === "paying"
-              ? "Opening paymentâ€¦"
+              ? "Opening payment..."
               : status === "error"
               ? "Try again"
               : "Vote â€” GHS 1"}
@@ -240,4 +240,5 @@ function loadPaystackScript(): Promise<void> {
     document.body.appendChild(script);
   });
 }
+
 
