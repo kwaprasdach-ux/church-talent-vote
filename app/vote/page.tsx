@@ -22,15 +22,16 @@ export default async function VotePage() {
           <div className="text-center py-24"><div className="text-6xl mb-4">🎤</div><h2 className="text-xl font-semibold text-white">No contestants yet</h2></div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-            {contestants.map((c) => (<ContestantCard key={c.id} contestant={{ id: c.id, name: c.name, code: (c as any).code, act: c.act, photoUrl: c.photoUrl, votes: c.votes }} />))}
+            {contestants.map((c) => (
+              <ContestantCard key={c.id} contestant={{ id: c.id, name: c.name, code: c.code, act: c.act, photoUrl: c.photoUrl, votes: c.votes }} />
+            ))}
           </div>
         )}
         <div className="mt-12 text-center flex items-center justify-center gap-6 text-sm text-white/40">
-          <Link href="/" className="hover:text-yellow-400 transition">← Back</Link>
-          <Link href="/results" className="hover:text-yellow-400 transition font-medium">📊 Live Leaderboard</Link>
+          <Link href="/" className="hover:text-yellow-400 transition">Back</Link>
+          <Link href="/results" className="hover:text-yellow-400 transition font-medium">Live Leaderboard</Link>
         </div>
       </div>
     </main>
   );
 }
-
