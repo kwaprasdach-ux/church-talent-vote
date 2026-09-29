@@ -101,7 +101,7 @@ export default function AdminDashboard() {
                   {isEditing ? (
                     <div className="flex flex-col gap-2">
                       <input className="input text-sm" value={editFields.name} onChange={(e) => setEditFields({...editFields, name: e.target.value})} placeholder="Name" />
-                      <input className="input text-sm" value={editFields.act} onChange={(e) => setEditFields({...editFields, act: e.target.value})} placeholder="Act" />
+                      
                       <input className="input text-sm" value={editFields.photoUrl} onChange={(e) => setEditFields({...editFields, photoUrl: e.target.value})} placeholder="Photo URL" />
                       <div className="flex gap-2">
                         <button onClick={() => saveEdit(c.id)} className="flex-1 bg-yellow-400 text-gray-900 font-bold text-sm py-2 rounded-xl">Save</button>
@@ -138,4 +138,5 @@ export default function AdminDashboard() {
     </main>
   );
 }
+
 
