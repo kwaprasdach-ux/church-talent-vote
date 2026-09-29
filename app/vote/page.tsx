@@ -31,9 +31,14 @@ export default async function VotePage() {
           <Link href="/" className="hover:text-yellow-400 transition">Back</Link>
           <Link href="/results" className="hover:text-yellow-400 transition font-medium">Live Leaderboard</Link>
         </div>
+        <div className="mt-6 pt-4 border-t border-white/5 text-center">
+          <p className="text-xs text-white/20">Built by <span className="text-yellow-400/50 font-semibold">Pascal Consult</span></p>
+          <p className="text-xs text-white/15 mt-0.5">Call: 0534406881 | WhatsApp: 0553324655</p>
+        </div>
       </div>
     </main>
   );
 }
+
 
 

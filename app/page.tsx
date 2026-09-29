@@ -34,8 +34,13 @@ export default function SplashPage() {
             <span>|</span>
             <span>GHS 1 = 1 Vote</span>
           </div>
+          <div className="pt-2 border-t border-white/5 text-center">
+            <p className="text-xs text-white/20">Built by <span className="text-yellow-400/50 font-semibold">Pascal Consult</span></p>
+            <p className="text-xs text-white/15">0534406881 | WhatsApp: 0553324655</p>
+          </div>
         </div>
       </div>
     </main>
   );
 }
+

@@ -65,9 +65,15 @@ export default function ResultsPage() {
         )}
         <div className="mt-10 text-center flex items-center justify-center gap-6 text-sm text-white/30">
           <Link href="/vote" className="hover:text-yellow-400 transition font-medium">Back to voting</Link>
-          {lastUpdated && <span>Updated {lastUpdated.toLocaleTimeString()}</span>}
+          {lastUpdated && <span>Updated {lastUpdated.toLocaleTimeString()}</span>
+          }
+        </div>
+        <div className="mt-4 pt-4 border-t border-white/5 text-center">
+          <p className="text-xs text-white/20">Built by <span className="text-yellow-400/50 font-semibold">Pascal Consult</span></p>
+          <p className="text-xs text-white/15 mt-0.5">Call: 0534406881 | WhatsApp: 0553324655</p>
         </div>
       </div>
     </main>
   );
 }
+
