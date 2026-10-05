@@ -53,7 +53,6 @@ export default function AdminDashboard() {
           </div>
           <div className="flex items-center gap-4">
             <a href="/vote" target="_blank" className="text-xs text-yellow-400 hover:underline hidden sm:block">Voting page</a>
-            <a href="/results" target="_blank" className="text-xs text-yellow-400 hover:underline hidden sm:block">Leaderboard</a>
             <button onClick={logout} className="text-xs text-white/40 hover:text-white transition">Log out</button>
           </div>
         </div>
@@ -78,10 +77,11 @@ export default function AdminDashboard() {
           <h2 className="text-base font-bold text-white mb-3">Add Contestant</h2>
           <AdminContestantForm onAdded={load} />
         </section>
+        {/* Full leaderboard — admin only */}
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-base font-bold text-white flex items-center gap-2">
-              Live Results
+              Live Leaderboard
               <span className="inline-flex items-center gap-1 text-xs font-normal text-green-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />Live
               </span>
@@ -96,12 +96,15 @@ export default function AdminDashboard() {
             {sorted.map((c, i) => {
               const pct = totalVotes > 0 ? Math.round((c.votes / totalVotes) * 100) : 0;
               const isEditing = editingId === c.id;
+              const rankLabel = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`;
+              const barColor = i === 0 ? "bg-yellow-400" : i === 1 ? "bg-gray-400" : i === 2 ? "bg-amber-500" : "bg-green-500";
+              const ringClass = i === 0 ? "ring-1 ring-yellow-400/40" : "";
               return (
-                <div key={c.id} className="p-4">
+                <div key={c.id} className={`p-4 ${ringClass}`}>
                   {isEditing ? (
                     <div className="flex flex-col gap-2">
                       <input className="input text-sm" value={editFields.name} onChange={(e) => setEditFields({...editFields, name: e.target.value})} placeholder="Name" />
-                      
+                      <input className="input text-sm" value={editFields.act} onChange={(e) => setEditFields({...editFields, act: e.target.value})} placeholder="Act / talent" />
                       <input className="input text-sm" value={editFields.photoUrl} onChange={(e) => setEditFields({...editFields, photoUrl: e.target.value})} placeholder="Photo URL" />
                       <div className="flex gap-2">
                         <button onClick={() => saveEdit(c.id)} className="flex-1 bg-yellow-400 text-gray-900 font-bold text-sm py-2 rounded-xl">Save</button>
@@ -110,7 +113,7 @@ export default function AdminDashboard() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-3">
-                      <span className="w-7 text-center shrink-0 text-sm font-bold text-white/40">#{i+1}</span>
+                      <span className="w-8 text-center shrink-0 text-sm font-bold">{rankLabel}</span>
                       <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-green-900 flex items-center justify-center relative">
                         {c.photoUrl ? (<Image src={c.photoUrl} alt={c.name} fill sizes="40px" className="object-cover" />) : (<span className="text-yellow-400 font-bold text-sm">{c.name.charAt(0).toUpperCase()}</span>)}
                       </div>
@@ -120,7 +123,7 @@ export default function AdminDashboard() {
                           <p className="text-xs text-white/40 shrink-0">{c.votes} ({pct}%)</p>
                         </div>
                         <div className="mt-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                          <div className="h-full bg-yellow-400 rounded-full transition-all duration-500" style={{width: pct + "%"}} />
+                          <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{width: pct + "%"}} />
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">

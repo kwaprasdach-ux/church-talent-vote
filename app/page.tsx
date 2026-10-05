@@ -30,8 +30,6 @@ export default function SplashPage() {
           </div>
           <Link href="/vote" className="w-full py-4 rounded-2xl font-extrabold text-gray-900 text-base text-center active:scale-95 transition-transform" style={{background:"linear-gradient(90deg,#facc15,#f59e0b)",boxShadow:"0 4px 20px rgba(250,204,21,0.3)"}}>Start Voting Now</Link>
           <div className="flex items-center gap-5 text-xs text-white/30">
-            <Link href="/results" className="hover:text-yellow-400 transition">Live Leaderboard</Link>
-            <span>|</span>
             <span>GHS 1 = 1 Vote</span>
           </div>
           <div className="pt-2 border-t border-white/5 text-center">
