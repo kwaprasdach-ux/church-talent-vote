@@ -7,6 +7,15 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      keyframes: {
+        shrink: {
+          "0%":   { width: "100%" },
+          "100%": { width: "0%" },
+        },
+      },
+      animation: {
+        shrink: "shrink 4s linear forwards",
+      },
       colors: {
         brand: {
           50:  "#f0fdf4",
