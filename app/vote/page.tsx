@@ -76,6 +76,7 @@ export default function VotePage() {
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-yellow-400 drop-shadow-lg">Adventist Youth Talented Show</h1>
         <p className="text-yellow-300/70 text-sm mt-1 tracking-widest uppercase">Yeretete Daakye Akandifo</p>
+        {/* v2 */}
       </div>
 
       <div className="border-t border-yellow-400/20 mx-4" />
