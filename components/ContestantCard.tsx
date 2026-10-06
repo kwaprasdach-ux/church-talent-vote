@@ -124,7 +124,6 @@ export default function ContestantCard({ contestant, position }: { contestant: C
         {/* Info */}
         <div className="p-3 flex flex-col gap-1.5 flex-1">
           <h3 className="font-bold text-white text-sm leading-tight">{contestant.name}</h3>
-          <p className="text-xs text-white/30">{votes} {votes === 1 ? "vote" : "votes"}</p>
 
           {/* Quantity picker */}
           {status === "picker" && (

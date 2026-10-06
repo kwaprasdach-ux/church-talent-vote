@@ -5,16 +5,12 @@ import Image from "next/image";
 export const dynamic = "force-dynamic";
 export default async function VotePage() {
   const contestants = await prisma.contestant.findMany({ orderBy: [{ order: "asc" }, { createdAt: "asc" }] });
-  const totalVotes = contestants.reduce((sum, c) => sum + c.votes, 0);
   return (
     <main className="min-h-screen">
       <div className="max-w-5xl mx-auto px-4 py-8 text-center">
         <div className="flex justify-center mb-0"><Image src="/logo.png" alt="ADYOTs Logo" width={220} height={110} className="object-contain drop-shadow-lg" /></div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-yellow-400 drop-shadow-lg">Adventist Youth Talented Show</h1>
         <p className="text-yellow-300/70 text-sm mt-1 tracking-widest uppercase">Yeretete Daakye Akandifo</p>
-        <div className="mt-4 inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-yellow-400/30 rounded-full px-5 py-2 text-sm font-medium text-white">
-          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />{totalVotes} {totalVotes === 1 ? "vote" : "votes"} cast so far
-        </div>
       </div>
       <div className="border-t border-yellow-400/20 mx-4" />
       <div className="max-w-5xl mx-auto px-4 py-8">
