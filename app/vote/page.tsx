@@ -11,6 +11,7 @@ export default function VotePage() {
   const [contestants, setContestants] = useState<Contestant[]>([]);
   const [loading, setLoading] = useState(true);
   const [voted, setVoted] = useState<VotedInfo | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/contestants", { cache: "no-store" });
@@ -19,9 +20,14 @@ export default function VotePage() {
 
   useEffect(() => { load(); }, [load]);
 
+  function handleSelect(id: string) {
+    // If tapping the already-open card, close it; otherwise open the new one
+    setSelectedId((prev) => (prev === id ? null : id));
+  }
+
   function handleVoted(name: string, qty: number, photo: string | null) {
+    setSelectedId(null);
     setVoted({ name, qty, photo });
-    // After 5 seconds hide overlay and reload contestant data
     setTimeout(() => { setVoted(null); load(); }, 5000);
   }
 
@@ -33,7 +39,6 @@ export default function VotePage() {
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-6 text-center"
           style={{ background: "rgba(0,0,0,0.93)", backdropFilter: "blur(20px)" }}>
           <div className="flex flex-col items-center gap-5 max-w-sm w-full">
-
             {/* Green checkmark */}
             <div className="w-24 h-24 rounded-full flex items-center justify-center"
               style={{ background: "linear-gradient(135deg,#22c55e,#16a34a)", boxShadow: "0 0 50px rgba(34,197,94,0.5)" }}>
@@ -41,18 +46,14 @@ export default function VotePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-
             <div className="space-y-1">
               <p className="text-green-400 text-sm font-semibold uppercase tracking-widest">Vote Confirmed!</p>
               <h2 className="text-2xl font-extrabold text-white">Thank you for voting!</h2>
               <p className="text-white/60 text-sm mt-2">
-                You cast{" "}
-                <span className="text-yellow-400 font-bold">{voted.qty} {voted.qty === 1 ? "vote" : "votes"}</span>{" "}
-                for
+                You cast <span className="text-yellow-400 font-bold">{voted.qty} {voted.qty === 1 ? "vote" : "votes"}</span> for
               </p>
               <p className="text-yellow-400 font-extrabold text-xl">{voted.name}</p>
             </div>
-
             {/* Photo */}
             <div className="w-24 h-24 rounded-2xl overflow-hidden relative bg-green-900 flex items-center justify-center"
               style={{ border: "3px solid rgba(34,197,94,0.6)" }}>
@@ -60,9 +61,7 @@ export default function VotePage() {
                 ? <Image src={voted.photo} alt={voted.name} fill sizes="96px" className="object-cover object-top" />
                 : <span className="text-yellow-400 font-extrabold text-3xl">{voted.name.charAt(0).toUpperCase()}</span>}
             </div>
-
             <p className="text-white/30 text-xs">Returning to voting page in a moment…</p>
-
             {/* Countdown bar */}
             <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
               <div className="h-full bg-green-400 rounded-full animate-shrink" />
@@ -89,7 +88,13 @@ export default function VotePage() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
             {contestants.map((c) => (
-              <ContestantCard key={c.id} contestant={c} onVoted={handleVoted} />
+              <ContestantCard
+                key={c.id}
+                contestant={c}
+                isOpen={selectedId === c.id}
+                onSelect={() => handleSelect(c.id)}
+                onVoted={handleVoted}
+              />
             ))}
           </div>
         )}

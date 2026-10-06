@@ -5,26 +5,43 @@ import Image from "next/image";
 type Contestant = { id: string; name: string; code?: string | null; act: string | null; photoUrl: string | null; votes: number; };
 const PAYSTACK_PUBLIC_KEY = "pk_test_93fc71e9bd92de0dcf036d185484eb7090dadc22";
 
-export default function ContestantCard({ contestant, onVoted }: { contestant: Contestant; onVoted?: (name: string, qty: number, photo: string | null) => void }) {
-  const [status, setStatus] = useState<"idle" | "picker" | "paying" | "error">("idle");
+type Props = {
+  contestant: Contestant;
+  isOpen?: boolean;
+  onSelect?: () => void;
+  onVoted?: (name: string, qty: number, photo: string | null) => void;
+};
+
+export default function ContestantCard({ contestant, isOpen = false, onSelect, onVoted }: Props) {
+  const [paying, setPaying] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [errorMsg, setErrorMsg] = useState("");
   const initial = contestant.name.charAt(0).toUpperCase();
 
-  function handleVoteClick() { if (status !== "idle") return; setQuantity(1); setErrorMsg(""); setStatus("picker"); }
+  function handleVoteClick() {
+    setQuantity(1);
+    setErrorMsg("");
+    onSelect?.();
+  }
+
   function decrement() { setQuantity((q) => Math.max(1, q - 1)); }
   function increment() { setQuantity((q) => Math.min(50, q + 1)); }
 
   async function handlePay(e: React.FormEvent) {
-    e.preventDefault(); setStatus("paying"); setErrorMsg("");
+    e.preventDefault();
+    setPaying(true);
+    setErrorMsg("");
     try {
       const initRes = await fetch("/api/payment/initialize", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contestantId: contestant.id, quantity }),
       });
       const initData = await initRes.json();
       if (!initRes.ok) throw new Error(initData.error || "Could not start payment");
+
       await loadPaystackScript();
+
       const handler = (window as any).PaystackPop.setup({
         key: PAYSTACK_PUBLIC_KEY,
         email: "votes@churchtalentshow.com",
@@ -33,42 +50,40 @@ export default function ContestantCard({ contestant, onVoted }: { contestant: Co
         ref: initData.reference,
         channels: ["mobile_money"],
         label: quantity + " vote(s) for " + contestant.name,
-        onClose: function () { setStatus("idle"); },
+        onClose: function () {
+          setPaying(false);
+        },
         callback: function (response: { reference: string }) {
           fetch("/api/payment/verify", {
-            method: "POST", headers: { "Content-Type": "application/json" },
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ reference: response.reference }),
           })
             .then((r) => r.json())
             .then((data) => {
+              setPaying(false);
               if (data.ok) {
-                setStatus("idle");
-                // Bubble up to the page so the full-screen overlay shows
                 onVoted?.(contestant.name, quantity, contestant.photoUrl ?? null);
               } else {
                 setErrorMsg(data.error || "Vote failed.");
-                setStatus("error");
-                setTimeout(() => setStatus("picker"), 3000);
               }
             })
             .catch(() => {
+              setPaying(false);
               setErrorMsg("Vote failed. Contact admin.");
-              setStatus("error");
-              setTimeout(() => setStatus("picker"), 3000);
             });
         },
       });
       handler.openIframe();
     } catch (err: any) {
+      setPaying(false);
       setErrorMsg(err.message || "Something went wrong.");
-      setStatus("error");
-      setTimeout(() => setStatus("picker"), 3000);
     }
   }
 
   return (
     <div
-      className="flex flex-col overflow-hidden transition-all duration-200 hover:-translate-y-1 rounded-2xl hover:ring-1 hover:ring-yellow-400/40 hover:shadow-lg"
+      className={`flex flex-col overflow-hidden rounded-2xl transition-all duration-200 ${isOpen ? "ring-2 ring-yellow-400 shadow-yellow-400/20 shadow-lg" : "hover:ring-1 hover:ring-yellow-400/40 hover:-translate-y-1 hover:shadow-lg"}`}
       style={{ background: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(8px)" }}
     >
       {/* Photo */}
@@ -93,8 +108,8 @@ export default function ContestantCard({ contestant, onVoted }: { contestant: Co
       <div className="p-3 flex flex-col gap-1.5 flex-1">
         <h3 className="font-bold text-white text-sm leading-tight">{contestant.name}</h3>
 
-        {/* Quantity picker */}
-        {status === "picker" && (
+        {/* Quantity picker — only shows when this card is open */}
+        {isOpen && (
           <form onSubmit={handlePay} className="mt-1 flex flex-col gap-2">
             <div className="flex items-center justify-between rounded-xl px-2 py-1.5"
               style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)" }}>
@@ -111,27 +126,22 @@ export default function ContestantCard({ contestant, onVoted }: { contestant: Co
             </div>
             {errorMsg && <p className="text-xs text-red-400">{errorMsg}</p>}
             <div className="flex gap-1.5">
-              <button type="submit" className="flex-1 py-2 rounded-xl text-xs font-bold text-gray-900 active:scale-95 transition"
+              <button type="submit" disabled={paying} className="flex-1 py-2 rounded-xl text-xs font-bold text-gray-900 active:scale-95 transition disabled:opacity-60"
                 style={{ background: "linear-gradient(90deg,#facc15,#f59e0b)" }}>
-                Pay GHS {quantity}.00
+                {paying ? "Opening…" : `Pay GHS ${quantity}.00`}
               </button>
-              <button type="button" onClick={() => setStatus("idle")} className="px-2 text-xs text-white/30 hover:text-white border border-white/10 rounded-xl">X</button>
+              <button type="button" onClick={() => onSelect?.()} className="px-2 text-xs text-white/30 hover:text-white border border-white/10 rounded-xl">✕</button>
             </div>
           </form>
         )}
 
-        {/* Vote button */}
-        {status !== "picker" && (
+        {/* Vote button — only shows when this card is closed */}
+        {!isOpen && (
           <button
             onClick={handleVoteClick}
-            disabled={status === "paying"}
-            className="mt-auto py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={
-              status === "error" ? { background: "#ef4444", color: "white" } :
-              status === "paying" ? { background: "rgba(250,204,21,0.4)", color: "#111" } :
-              { background: "linear-gradient(90deg,#facc15,#f59e0b)", color: "#111", boxShadow: "0 2px 12px rgba(250,204,21,0.25)" }
-            }>
-            {status === "paying" ? "Opening..." : status === "error" ? "Try again" : "Vote - GHS 1"}
+            className="mt-auto py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95"
+            style={{ background: "linear-gradient(90deg,#facc15,#f59e0b)", color: "#111", boxShadow: "0 2px 12px rgba(250,204,21,0.25)" }}>
+            Vote - GHS 1
           </button>
         )}
       </div>
@@ -145,8 +155,11 @@ function loadPaystackScript(): Promise<void> {
     const existing = document.getElementById("paystack-script");
     if (existing) { existing.addEventListener("load", () => resolve()); return; }
     const script = document.createElement("script");
-    script.id = "paystack-script"; script.src = "https://js.paystack.co/v1/inline.js"; script.async = true;
-    script.onload = () => resolve(); script.onerror = () => reject(new Error("Failed to load Paystack"));
+    script.id = "paystack-script";
+    script.src = "https://js.paystack.co/v1/inline.js";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load Paystack"));
     document.body.appendChild(script);
   });
 }
