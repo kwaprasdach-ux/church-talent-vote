@@ -3,7 +3,6 @@ import { useState } from "react";
 import Image from "next/image";
 
 type Contestant = { id: string; name: string; code?: string | null; act: string | null; photoUrl: string | null; votes: number; };
-const PAYSTACK_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!;
 
 type Props = {
   contestant: Contestant;
@@ -32,7 +31,9 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
     if (paying) return;
     setPaying(true);
     setErrorMsg("");
+
     try {
+      // Step 1: initialize payment on server
       const initRes = await fetch("/api/payment/initialize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -41,24 +42,25 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
       const initData = await initRes.json();
       if (!initRes.ok) throw new Error(initData.error || "Could not start payment");
 
+      // Step 2: load Paystack script
       await loadPaystackScript();
 
-      // Build the callback URL — Paystack will redirect here after payment
-      const callbackUrl = `${window.location.origin}/api/payment/verify`;
+      const key = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!;
 
+      // Step 3: open Paystack popup — NO callback_url so it stays inline
       const handler = (window as any).PaystackPop.setup({
-        key: PAYSTACK_PUBLIC_KEY,
+        key,
         email: "votes@churchtalentshow.com",
         amount: quantity * 100,
         currency: "GHS",
         ref: initData.reference,
         channels: ["mobile_money"],
-        label: quantity + " vote(s) for " + contestant.name,
-        callback_url: callbackUrl,
-        // Also handle inline callback as a fallback
-        onClose: function () { setPaying(false); },
+        label: `${quantity} vote(s) for ${contestant.name}`,
+        onClose: function () {
+          setPaying(false);
+        },
         callback: function (response: { reference: string }) {
-          // Inline callback — verify and show overlay directly
+          // Step 4: verify payment and cast votes
           fetch("/api/payment/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -68,6 +70,7 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
             .then((data) => {
               setPaying(false);
               if (data.ok) {
+                // Trigger the full-screen voted overlay on the page
                 onVoted?.(contestant.name, quantity, contestant.photoUrl ?? null);
               } else {
                 setErrorMsg(data.error || "Vote failed. Try again.");
@@ -75,10 +78,11 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
             })
             .catch(() => {
               setPaying(false);
-              setErrorMsg("Vote failed. Contact admin.");
+              setErrorMsg("Vote failed. Please contact admin.");
             });
         },
       });
+
       handler.openIframe();
     } catch (err: any) {
       setPaying(false);
@@ -99,7 +103,13 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
       <div className="relative" style={{ paddingBottom: "100%" }}>
         <div className="absolute inset-0 bg-gradient-to-br from-green-950 to-black flex items-center justify-center overflow-hidden">
           {contestant.photoUrl ? (
-            <Image src={contestant.photoUrl} alt={contestant.name} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover object-top" />
+            <Image
+              src={contestant.photoUrl}
+              alt={contestant.name}
+              fill
+              sizes="(max-width: 640px) 50vw, 25vw"
+              className="object-cover object-top"
+            />
           ) : (
             <span className="text-6xl font-extrabold text-yellow-400/60 select-none">{initial}</span>
           )}
@@ -140,12 +150,16 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
             </div>
             {errorMsg && <p className="text-xs text-red-400">{errorMsg}</p>}
             <div className="flex gap-1.5">
-              <button type="submit" disabled={paying}
+              <button
+                type="submit"
+                disabled={paying}
                 className="flex-1 py-2.5 rounded-xl text-sm font-bold text-gray-900 active:scale-95 transition disabled:opacity-60"
                 style={{ background: "linear-gradient(90deg,#facc15,#f59e0b)" }}>
                 {paying ? "Opening…" : `Pay GHS ${quantity}.00`}
               </button>
-              <button type="button" onClick={onSelect}
+              <button
+                type="button"
+                onClick={onSelect}
                 className="w-10 text-white/30 hover:text-white border border-white/10 rounded-xl text-sm font-bold transition">
                 ✕
               </button>
@@ -171,7 +185,10 @@ function loadPaystackScript(): Promise<void> {
   return new Promise((resolve, reject) => {
     if ((window as any).PaystackPop) return resolve();
     const existing = document.getElementById("paystack-script");
-    if (existing) { existing.addEventListener("load", () => resolve()); return; }
+    if (existing) {
+      existing.addEventListener("load", () => resolve());
+      return;
+    }
     const script = document.createElement("script");
     script.id = "paystack-script";
     script.src = "https://js.paystack.co/v1/inline.js";
