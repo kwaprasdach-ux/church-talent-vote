@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   keywords: ["ADYOTs", "Adventist Youth Talented Show", "Yeretete Daakye Akandifo", "talent show", "voting", "Ghana"],
   openGraph: {
     title: "ADYOTs — Vote for Your Favourite Performer 🎤",
-    description: "Cast your vote now! GHS 1 = 1 Vote. MTN · Vodafone · AirtelTigo Mobile Money accepted.",
+    description: "Cast your vote now! GHS 1 = 1 Vote. MTN · Telecel · AirtelTigo Mobile Money accepted.",
     url: APP_URL,
     siteName: "ADYOTs Talent Show",
     type: "website",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "ADYOTs — Vote for Your Favourite Performer 🎤",
-    description: "Cast your vote now! GHS 1 = 1 Vote. MTN · Vodafone · AirtelTigo Mobile Money accepted.",
+    description: "Cast your vote now! GHS 1 = 1 Vote. MTN · Telecel · AirtelTigo Mobile Money accepted.",
     images: ["/backdrop.jpg"],
   },
   icons: {

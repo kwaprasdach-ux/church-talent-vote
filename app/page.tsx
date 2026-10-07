@@ -25,7 +25,7 @@ export default function SplashPage() {
             </div>
             <div className="flex items-center justify-between px-4 py-3 rounded-xl" style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)"}}>
               <span className="text-white/50">Networks</span>
-              <span className="text-white font-medium">MTN - Vodafone - AirtelTigo</span>
+              <span className="text-white font-medium">MTN - Telecel - AirtelTigo</span>
             </div>
           </div>
           <Link href="/vote" className="w-full py-4 rounded-2xl font-extrabold text-gray-900 text-base text-center active:scale-95 transition-transform" style={{background:"linear-gradient(90deg,#facc15,#f59e0b)",boxShadow:"0 4px 20px rgba(250,204,21,0.3)"}}>Start Voting Now</Link>
