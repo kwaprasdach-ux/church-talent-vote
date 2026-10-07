@@ -10,6 +10,7 @@ type VotedInfo = { name: string; qty: number; photo: string | null };
 export default function VotePage() {
   const [contestants, setContestants] = useState<Contestant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [voted, setVoted] = useState<VotedInfo | null>(null);
 
   const load = useCallback(async () => {
@@ -19,7 +20,13 @@ export default function VotePage() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Tap a card: open it, close any other open card
+  function handleSelect(id: string) {
+    setSelectedId((prev) => (prev === id ? null : id));
+  }
+
   function handleVoted(name: string, qty: number, photo: string | null) {
+    setSelectedId(null);
     setVoted({ name, qty, photo });
     setTimeout(() => { setVoted(null); load(); }, 5000);
   }
@@ -27,7 +34,7 @@ export default function VotePage() {
   return (
     <main className="min-h-screen">
 
-      {/* Full-screen voted overlay */}
+      {/* ── Full-screen "Voted!" overlay ── */}
       {voted && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-6 text-center"
           style={{ background: "rgba(0,0,0,0.95)", backdropFilter: "blur(20px)" }}>
@@ -44,16 +51,24 @@ export default function VotePage() {
             <div className="space-y-2">
               <p className="text-green-400 text-sm font-semibold uppercase tracking-widest">Vote Confirmed!</p>
               <h2 className="text-3xl font-extrabold text-white">Thank you!</h2>
-              <p className="text-white/60 text-sm">You voted for</p>
+              <p className="text-white/60 text-sm">
+                You cast{" "}
+                <span className="text-yellow-400 font-bold">{voted.qty} {voted.qty === 1 ? "vote" : "votes"}</span>{" "}
+                for
+              </p>
               <p className="text-yellow-400 font-extrabold text-2xl">{voted.name}</p>
             </div>
 
-            {/* Photo */}
+            {/* Contestant photo */}
             <div className="w-28 h-28 rounded-2xl overflow-hidden relative bg-green-900 flex items-center justify-center"
               style={{ border: "3px solid rgba(34,197,94,0.7)" }}>
               {voted.photo
                 ? <Image src={voted.photo} alt={voted.name} fill sizes="112px" className="object-cover object-top" />
                 : <span className="text-yellow-400 font-extrabold text-4xl">{voted.name.charAt(0).toUpperCase()}</span>}
+              {/* Voted badge on photo */}
+              <div className="absolute bottom-0 left-0 right-0 bg-green-500 py-1">
+                <p className="text-white text-xs font-extrabold text-center tracking-wide">✓ VOTED</p>
+              </div>
             </div>
 
             <p className="text-white/30 text-xs">Returning to voting page in a moment…</p>
@@ -66,6 +81,7 @@ export default function VotePage() {
         </div>
       )}
 
+      {/* ── Page header ── */}
       <div className="max-w-5xl mx-auto px-4 py-8 text-center">
         <div className="flex justify-center mb-0">
           <Image src="/logo.png" alt="ADYOTs Logo" width={220} height={110} className="object-contain drop-shadow-lg" />
@@ -76,6 +92,7 @@ export default function VotePage() {
 
       <div className="border-t border-yellow-400/20 mx-4" />
 
+      {/* ── Contestant grid ── */}
       <div className="max-w-5xl mx-auto px-4 py-8">
         {loading ? (
           <div className="text-center py-24 text-white/30">Loading contestants…</div>
@@ -87,11 +104,18 @@ export default function VotePage() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
             {contestants.map((c) => (
-              <ContestantCard key={c.id} contestant={c} onVoted={handleVoted} />
+              <ContestantCard
+                key={c.id}
+                contestant={c}
+                isOpen={selectedId === c.id}
+                onSelect={() => handleSelect(c.id)}
+                onVoted={handleVoted}
+              />
             ))}
           </div>
         )}
-        <div className="mt-12 text-center flex items-center justify-center gap-6 text-sm text-white/40">
+
+        <div className="mt-12 text-center text-sm text-white/40">
           <Link href="/" className="hover:text-yellow-400 transition">Back</Link>
         </div>
         <div className="mt-6 pt-4 border-t border-white/5 text-center">
