@@ -3,7 +3,7 @@ import { useState } from "react";
 import Image from "next/image";
 
 type Contestant = { id: string; name: string; code?: string | null; act: string | null; photoUrl: string | null; votes: number; };
-const PAYSTACK_PUBLIC_KEY = "pk_test_93fc71e9bd92de0dcf036d185484eb7090dadc22";
+const PAYSTACK_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!;
 
 type Props = {
   contestant: Contestant;

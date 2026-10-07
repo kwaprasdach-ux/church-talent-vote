@@ -17,6 +17,7 @@ export default function AdminDashboard() {
   const load = useCallback(async () => {
     const res = await fetch("/api/contestants", { cache: "no-store" });
     if (res.ok) { setContestants(await res.json()); setLoading(false); }
+    else { setLoading(false); }
   }, []);
 
   useEffect(() => { load(); const t = setInterval(load, 3000); return () => clearInterval(t); }, [load]);

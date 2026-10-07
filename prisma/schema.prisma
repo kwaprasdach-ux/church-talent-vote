@@ -17,4 +17,15 @@ model Contestant {
   order     Int      @default(0)
   votes     Int      @default(0)
   createdAt DateTime @default(now())
+  Vote      Vote[]
+}
+
+model Vote {
+  id           String     @id @default(cuid())
+  reference    String     @unique  // Paystack reference — prevents replay attacks
+  contestantId String
+  contestant   Contestant @relation(fields: [contestantId], references: [id])
+  quantity     Int
+  amountGhs    Float
+  createdAt    DateTime   @default(now())
 }

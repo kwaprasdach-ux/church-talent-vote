@@ -18,17 +18,19 @@ function VotePageInner() {
   const load = useCallback(async () => {
     const res = await fetch("/api/contestants", { cache: "no-store" });
     if (res.ok) { setContestants(await res.json()); setLoading(false); }
+    else { setLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  // Handle redirect back from Paystack (?voted=contestantId)
+  // Handle redirect back from Paystack (?voted=contestantId&qty=N)
   useEffect(() => {
     const votedId = searchParams.get("voted");
+    const qty = parseInt(searchParams.get("qty") || "1", 10);
     if (!votedId || contestants.length === 0) return;
     const c = contestants.find((x) => x.id === votedId);
     if (c) {
-      setVoted({ name: c.name, qty: 1, photo: c.photoUrl });
+      setVoted({ name: c.name, qty: Math.max(1, qty), photo: c.photoUrl });
       window.history.replaceState({}, "", "/vote");
       setTimeout(() => { setVoted(null); load(); }, 5000);
     }

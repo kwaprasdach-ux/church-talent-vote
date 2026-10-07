@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-const SITE_URL = "https://church-talent-vote.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://church-talent-vote.vercel.app";
 const QR_URL = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=8&data=${encodeURIComponent(SITE_URL)}`;
 
 export default function QRPage() {
@@ -22,40 +22,18 @@ export default function QRPage() {
           {/* QR Code */}
           <div className="bg-white rounded-2xl p-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={QR_URL}
-              alt="QR code for voting site"
-              width={300}
-              height={300}
-              className="block"
-            />
+            <img src={QR_URL} alt="QR code for voting site" width={300} height={300} className="block" />
           </div>
 
-          <a
-            href={SITE_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="text-yellow-400 text-xs font-semibold break-all underline underline-offset-2 hover:text-yellow-300 transition"
-          >
+          <a href={SITE_URL} target="_blank" rel="noreferrer"
+            className="text-yellow-400 text-xs font-semibold break-all underline underline-offset-2 hover:text-yellow-300 transition">
             {SITE_URL}
           </a>
           <p className="text-white/40 text-xs">Point your phone camera at the code above or click the link to open the voting page</p>
 
-          {/* File location */}
-          <div className="w-full rounded-xl px-4 py-3 text-left" style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)"}}>
-            <p className="text-white/30 text-xs uppercase tracking-widest mb-1">File location</p>
-            <p className="text-yellow-400/70 text-xs font-mono break-all">d:\church-talent-vote\talent-vote\app\qr\page.tsx</p>
-          </div>
-
-          {/* Download link */}
-          <a
-            href={QR_URL}
-            download="adyots-vote-qr.png"
-            target="_blank"
-            rel="noreferrer"
+          <a href={QR_URL} download="adyots-vote-qr.png" target="_blank" rel="noreferrer"
             className="w-full py-3 rounded-2xl font-extrabold text-gray-900 text-sm text-center"
-            style={{ background: "linear-gradient(90deg,#facc15,#f59e0b)" }}
-          >
+            style={{ background: "linear-gradient(90deg,#facc15,#f59e0b)" }}>
             ⬇ Download QR Code
           </a>
 
