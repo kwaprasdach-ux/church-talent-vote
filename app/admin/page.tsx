@@ -1,5 +1,5 @@
 ﻿"use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import AdminContestantForm from "@/components/AdminContestantForm";
@@ -11,6 +11,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editFields, setEditFields] = useState({ name: "", act: "", photoUrl: "" });
+  const [editUploading, setEditUploading] = useState(false);
+  const editFileRef = useRef<HTMLInputElement>(null);
   const [resetting, setResetting] = useState(false);
   const router = useRouter();
 
@@ -30,6 +32,17 @@ export default function AdminDashboard() {
   async function saveEdit(id: string) {
     await fetch("/api/contestants/" + id, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editFields) });
     setEditingId(null); load();
+  }
+
+  async function handleEditPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEditUploading(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    setEditUploading(false);
+    if (res.ok) { const d = await res.json(); setEditFields((f) => ({ ...f, photoUrl: d.url })); }
   }
 
   async function resetAllVotes() {
@@ -106,7 +119,24 @@ export default function AdminDashboard() {
                     <div className="flex flex-col gap-2">
                       <input className="input text-sm" value={editFields.name} onChange={(e) => setEditFields({...editFields, name: e.target.value})} placeholder="Name" />
                       <input className="input text-sm" value={editFields.act} onChange={(e) => setEditFields({...editFields, act: e.target.value})} placeholder="Act / talent" />
-                      <input className="input text-sm" value={editFields.photoUrl} onChange={(e) => setEditFields({...editFields, photoUrl: e.target.value})} placeholder="Photo URL" />
+                      {/* Photo upload */}
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => editFileRef.current?.click()}
+                          className="px-3 py-2 rounded-xl text-xs font-semibold text-gray-900 transition active:scale-95 disabled:opacity-60"
+                          style={{background:"linear-gradient(90deg,#facc15,#f59e0b)"}}
+                          disabled={editUploading}>
+                          {editUploading ? "Uploading…" : "Upload Photo"}
+                        </button>
+                        {editFields.photoUrl && (
+                          <div className="w-10 h-10 rounded-xl overflow-hidden relative border border-yellow-400/30 shrink-0">
+                            <Image src={editFields.photoUrl} alt="preview" fill sizes="40px" className="object-cover" />
+                          </div>
+                        )}
+                        {editFields.photoUrl && (
+                          <button type="button" onClick={() => setEditFields((f) => ({...f, photoUrl: ""}))} className="text-xs text-red-400 hover:text-red-300">Remove</button>
+                        )}
+                      </div>
+                      <input ref={editFileRef} type="file" accept="image/*" onChange={handleEditPhoto} className="hidden" />
                       <div className="flex gap-2">
                         <button onClick={() => saveEdit(c.id)} className="flex-1 bg-yellow-400 text-gray-900 font-bold text-sm py-2 rounded-xl">Save</button>
                         <button onClick={() => setEditingId(null)} className="flex-1 bg-white/10 text-white text-sm py-2 rounded-xl">Cancel</button>
