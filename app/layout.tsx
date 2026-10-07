@@ -1,13 +1,37 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://church-talent-vote.vercel.app";
+
 export const metadata: Metadata = {
-  title: "ADYOTs - Yeretete Daakye Akandifo | Talent Show Voting",
-  description: "Vote for your favourite performer at the Adventist Youth Talented Show (ADYOTs - Yeretete Daakye Akandifo).",
+  metadataBase: new URL(APP_URL),
+  title: "ADYOTs — Vote for Your Favourite Performer",
+  description: "Cast your vote for your favourite performer at the Adventist Youth Talented Show (ADYOTs — Yeretete Daakye Akandifo). GHS 1 = 1 Vote. Mobile money accepted.",
+  keywords: ["ADYOTs", "Adventist Youth Talented Show", "Yeretete Daakye Akandifo", "talent show", "voting", "Ghana"],
   openGraph: {
-    title: "ADYOTs - Yeretete Daakye Akandifo",
-    description: "Vote for your favourite performer at the Adventist Youth Talented Show.",
+    title: "ADYOTs — Vote for Your Favourite Performer 🎤",
+    description: "Cast your vote now! GHS 1 = 1 Vote. MTN · Vodafone · AirtelTigo Mobile Money accepted.",
+    url: APP_URL,
+    siteName: "ADYOTs Talent Show",
     type: "website",
+    images: [
+      {
+        url: "/backdrop.jpg",
+        width: 1200,
+        height: 630,
+        alt: "ADYOTs — Adventist Youth Talented Show",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ADYOTs — Vote for Your Favourite Performer 🎤",
+    description: "Cast your vote now! GHS 1 = 1 Vote. MTN · Vodafone · AirtelTigo Mobile Money accepted.",
+    images: ["/backdrop.jpg"],
+  },
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
   },
 };
 
@@ -21,7 +45,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
           rel="stylesheet"
         />
-        {/* Paystack loaded lazily inside ContestantCard — not needed globally */}
       </head>
       <body
         className="min-h-screen antialiased"
