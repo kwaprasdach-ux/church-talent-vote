@@ -1,5 +1,6 @@
 ﻿"use client";
 import { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import ContestantCard from "@/components/ContestantCard";
@@ -12,6 +13,7 @@ export default function VotePage() {
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [voted, setVoted] = useState<VotedInfo | null>(null);
+  const searchParams = useSearchParams();
 
   const load = useCallback(async () => {
     const res = await fetch("/api/contestants", { cache: "no-store" });
@@ -20,7 +22,19 @@ export default function VotePage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Tap a card: open it, close any other open card
+  // Handle redirect from Paystack after payment (?voted=contestantId)
+  useEffect(() => {
+    const votedId = searchParams.get("voted");
+    if (!votedId || contestants.length === 0) return;
+    const c = contestants.find((x) => x.id === votedId);
+    if (c) {
+      setVoted({ name: c.name, qty: 1, photo: c.photoUrl });
+      // Clean URL
+      window.history.replaceState({}, "", "/vote");
+      setTimeout(() => { setVoted(null); load(); }, 5000);
+    }
+  }, [searchParams, contestants, load]);
+
   function handleSelect(id: string) {
     setSelectedId((prev) => (prev === id ? null : id));
   }
@@ -42,7 +56,7 @@ export default function VotePage() {
 
             {/* Green checkmark */}
             <div className="w-24 h-24 rounded-full flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg,#22c55e,#16a34a)", boxShadow: "0 0 50px rgba(34,197,94,0.6)" }}>
+              style={{ background: "linear-gradient(135deg,#22c55e,#16a34a)", boxShadow: "0 0 60px rgba(34,197,94,0.7)" }}>
               <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
@@ -59,15 +73,18 @@ export default function VotePage() {
               <p className="text-yellow-400 font-extrabold text-2xl">{voted.name}</p>
             </div>
 
-            {/* Contestant photo */}
-            <div className="w-28 h-28 rounded-2xl overflow-hidden relative bg-green-900 flex items-center justify-center"
-              style={{ border: "3px solid rgba(34,197,94,0.7)" }}>
+            {/* Contestant photo with VOTED badge */}
+            <div className="w-28 h-28 rounded-2xl overflow-hidden relative flex items-center justify-center"
+              style={{ border: "3px solid rgba(34,197,94,0.8)" }}>
               {voted.photo
                 ? <Image src={voted.photo} alt={voted.name} fill sizes="112px" className="object-cover object-top" />
-                : <span className="text-yellow-400 font-extrabold text-4xl">{voted.name.charAt(0).toUpperCase()}</span>}
-              {/* Voted badge on photo */}
-              <div className="absolute bottom-0 left-0 right-0 bg-green-500 py-1">
-                <p className="text-white text-xs font-extrabold text-center tracking-wide">✓ VOTED</p>
+                : <div className="w-full h-full bg-green-900 flex items-center justify-center">
+                    <span className="text-yellow-400 font-extrabold text-4xl">{voted.name.charAt(0).toUpperCase()}</span>
+                  </div>
+              }
+              {/* VOTED badge over photo */}
+              <div className="absolute bottom-0 left-0 right-0 py-1.5" style={{ background: "rgba(34,197,94,0.95)" }}>
+                <p className="text-white text-xs font-extrabold text-center tracking-widest">✓ VOTED</p>
               </div>
             </div>
 
@@ -81,7 +98,7 @@ export default function VotePage() {
         </div>
       )}
 
-      {/* ── Page header ── */}
+      {/* ── Header ── */}
       <div className="max-w-5xl mx-auto px-4 py-8 text-center">
         <div className="flex justify-center mb-0">
           <Image src="/logo.png" alt="ADYOTs Logo" width={220} height={110} className="object-contain drop-shadow-lg" />
@@ -92,7 +109,7 @@ export default function VotePage() {
 
       <div className="border-t border-yellow-400/20 mx-4" />
 
-      {/* ── Contestant grid ── */}
+      {/* ── Grid ── */}
       <div className="max-w-5xl mx-auto px-4 py-8">
         {loading ? (
           <div className="text-center py-24 text-white/30">Loading contestants…</div>

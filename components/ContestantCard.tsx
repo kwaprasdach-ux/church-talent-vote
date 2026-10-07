@@ -43,6 +43,9 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
 
       await loadPaystackScript();
 
+      // Build the callback URL — Paystack will redirect here after payment
+      const callbackUrl = `${window.location.origin}/api/payment/verify`;
+
       const handler = (window as any).PaystackPop.setup({
         key: PAYSTACK_PUBLIC_KEY,
         email: "votes@churchtalentshow.com",
@@ -51,8 +54,11 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
         ref: initData.reference,
         channels: ["mobile_money"],
         label: quantity + " vote(s) for " + contestant.name,
+        callback_url: callbackUrl,
+        // Also handle inline callback as a fallback
         onClose: function () { setPaying(false); },
         callback: function (response: { reference: string }) {
+          // Inline callback — verify and show overlay directly
           fetch("/api/payment/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -97,7 +103,6 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
           ) : (
             <span className="text-6xl font-extrabold text-yellow-400/60 select-none">{initial}</span>
           )}
-          {/* Code badge */}
           {contestant.code && (
             <div className="absolute top-2 left-2 rounded-lg px-2 py-0.5 text-xs font-extrabold text-gray-900"
               style={{ background: "linear-gradient(90deg,#facc15,#f59e0b)" }}>
@@ -114,7 +119,6 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
         {/* Quantity picker — only on the selected card */}
         {isOpen && (
           <form onSubmit={handlePay} className="flex flex-col gap-2">
-            {/* +/- stepper */}
             <div className="flex items-center justify-between rounded-xl px-2 py-1.5"
               style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)" }}>
               <button type="button" onClick={decrement}
@@ -130,16 +134,11 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
                 +
               </button>
             </div>
-
-            {/* Total */}
             <div className="flex items-center justify-between px-1">
               <span className="text-xs text-white/40">Total</span>
               <span className="text-sm font-extrabold text-yellow-400">GHS {quantity}.00</span>
             </div>
-
             {errorMsg && <p className="text-xs text-red-400">{errorMsg}</p>}
-
-            {/* Pay + Cancel */}
             <div className="flex gap-1.5">
               <button type="submit" disabled={paying}
                 className="flex-1 py-2.5 rounded-xl text-sm font-bold text-gray-900 active:scale-95 transition disabled:opacity-60"
@@ -154,7 +153,7 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
           </form>
         )}
 
-        {/* Vote button — only when card is closed */}
+        {/* Vote button */}
         {!isOpen && (
           <button
             onClick={handleVoteClick}

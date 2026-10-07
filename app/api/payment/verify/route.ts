@@ -54,11 +54,15 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const reference = req.nextUrl.searchParams.get("reference");
   if (!reference) {
-    return NextResponse.redirect(new URL("/?payment=failed", req.nextUrl.origin));
+    return NextResponse.redirect(new URL("/vote?payment=failed", req.nextUrl.origin));
   }
   const result = await verifyAndVote(reference);
-  const url = new URL("/", req.nextUrl.origin);
-  url.searchParams.set("payment", result.ok ? "success" : "failed");
-  if (result.contestantId) url.searchParams.set("voted", result.contestantId);
+  if (!result.ok) {
+    return NextResponse.redirect(new URL("/vote?payment=failed", req.nextUrl.origin));
+  }
+  // Redirect back to vote page with success info so the overlay shows
+  const url = new URL("/vote", req.nextUrl.origin);
+  url.searchParams.set("voted", result.contestantId!);
+  url.searchParams.set("qty", String(result.votes));
   return NextResponse.redirect(url);
 }
