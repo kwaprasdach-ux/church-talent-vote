@@ -12,6 +12,7 @@ function VotePageInner() {
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [justVotedId, setJustVotedId] = useState<string | null>(null);
+  const [payingNow, setPayingNow] = useState(false);
   const searchParams = useSearchParams();
 
   const load = useCallback(async () => {
@@ -33,11 +34,21 @@ function VotePageInner() {
   }, [searchParams, contestants.length, load]);
 
   function handleSelect(id: string) {
+    if (payingNow) return; // block opening another card while payment is in progress
     setSelectedId((prev) => (prev === id ? null : id));
   }
 
   function handleVoted() {
-    load(); // refresh vote counts in background
+    setPayingNow(false);
+    load();
+  }
+
+  function handlePayingStart() {
+    setPayingNow(true);
+  }
+
+  function handlePayingEnd() {
+    setPayingNow(false);
   }
 
   return (
@@ -69,6 +80,8 @@ function VotePageInner() {
                 isOpen={selectedId === c.id}
                 onSelect={() => handleSelect(c.id)}
                 onVoted={handleVoted}
+                onPayingStart={handlePayingStart}
+                onPayingEnd={handlePayingEnd}
                 startVoted={justVotedId === c.id}
               />
             ))}

@@ -9,10 +9,12 @@ type Props = {
   isOpen: boolean;
   onSelect: () => void;
   onVoted?: () => void;
-  startVoted?: boolean; // true when Paystack redirected back after mobile money
+  onPayingStart?: () => void;
+  onPayingEnd?: () => void;
+  startVoted?: boolean;
 };
 
-export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, startVoted = false }: Props) {
+export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, onPayingStart, onPayingEnd, startVoted = false }: Props) {
   const [paying, setPaying] = useState(false);
   const [voted, setVoted] = useState(startVoted);
   const [quantity, setQuantity] = useState(1);
@@ -35,6 +37,7 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
     e.preventDefault();
     if (paying) return; // hard guard against double-tap
     setPaying(true);
+    onPayingStart?.();
     setErrorMsg("");
     try {
       const initRes = await fetch("/api/payment/initialize", {
@@ -59,7 +62,7 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
         channels: ["mobile_money"],
         label: `${quantity} vote(s) for ${contestant.name}`,
         callback_url: callbackUrl,
-        onClose: function () { setPaying(false); },
+        onClose: function () { setPaying(false); onPayingEnd?.(); },
         callback: function (response: { reference: string }) {
           fetch("/api/payment/verify", {
             method: "POST",
@@ -71,20 +74,23 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
               setPaying(false);
               if (data.ok) {
                 setVoted(true);
-                onSelect(); // close the picker
+                onSelect();
                 onVoted?.();
-                // Reset voted badge after 6 seconds
+                onPayingEnd?.();
                 setTimeout(() => setVoted(false), 6000);
               } else {
+                setPaying(false);
+                onPayingEnd?.();
                 setErrorMsg(data.error || "Vote failed. Try again.");
               }
             })
-            .catch(() => { setPaying(false); setErrorMsg("Vote failed. Contact admin."); });
+            .catch(() => { setPaying(false); onPayingEnd?.(); setErrorMsg("Vote failed. Contact admin."); });
         },
       });
       handler.openIframe();
     } catch (err: any) {
       setPaying(false);
+      onPayingEnd?.();
       setErrorMsg(err.message || "Something went wrong.");
     }
   }
