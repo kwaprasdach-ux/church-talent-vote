@@ -82,16 +82,23 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
                 setPaying(false);
                 onPayingEnd?.();
                 setErrorMsg(data.error || "Vote failed. Try again.");
+                setTimeout(() => setErrorMsg(""), 5000);
               }
             })
-            .catch(() => { setPaying(false); onPayingEnd?.(); setErrorMsg("Vote failed. Contact admin."); });
+            .catch(() => {
+              setPaying(false);
+              onPayingEnd?.();
+              setErrorMsg("Network error. Please try again.");
+              setTimeout(() => setErrorMsg(""), 5000);
+            });
         },
       });
       handler.openIframe();
     } catch (err: any) {
       setPaying(false);
       onPayingEnd?.();
-      setErrorMsg(err.message || "Something went wrong.");
+      setErrorMsg(err.message || "Something went wrong. Please try again.");
+      setTimeout(() => setErrorMsg(""), 5000);
     }
   }
 
