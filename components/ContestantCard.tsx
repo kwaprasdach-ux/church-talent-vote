@@ -45,7 +45,7 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
       // Step 2: load Paystack script
       await loadPaystackScript();
 
-      const key = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!;
+      const key = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_test_93fc71e9bd92de0dcf036d185484eb7090dadc22";
 
       // Step 3: open Paystack popup — NO callback_url so it stays inline
       const handler = (window as any).PaystackPop.setup({
