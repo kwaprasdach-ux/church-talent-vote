@@ -1,5 +1,5 @@
 ﻿"use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 
 type Contestant = { id: string; name: string; code?: string | null; act: string | null; photoUrl: string | null; votes: number; };
@@ -8,13 +8,23 @@ type Props = {
   contestant: Contestant;
   isOpen: boolean;
   onSelect: () => void;
-  onVoted?: (name: string, qty: number, photo: string | null) => void;
+  onVoted?: () => void;
+  startVoted?: boolean; // true when Paystack redirected back after mobile money
 };
 
-export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }: Props) {
+export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, startVoted = false }: Props) {
   const [paying, setPaying] = useState(false);
+  const [voted, setVoted] = useState(startVoted);
   const [quantity, setQuantity] = useState(1);
   const [errorMsg, setErrorMsg] = useState("");
+
+  // If startVoted changes to true (redirect flow), show voted state
+  useEffect(() => {
+    if (startVoted) {
+      setVoted(true);
+      setTimeout(() => setVoted(false), 6000);
+    }
+  }, [startVoted]);
   const initial = contestant.name.charAt(0).toUpperCase();
 
   function handleVoteClick() { setQuantity(1); setErrorMsg(""); onSelect(); }
@@ -38,8 +48,6 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
       await loadPaystackScript();
 
       const key = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_live_452dfb5370fd3c017bee297667d05aad90e59726";
-
-      // callback_url: where Paystack redirects after mobile money payment
       const callbackUrl = `${window.location.origin}/api/payment/verify`;
 
       const handler = (window as any).PaystackPop.setup({
@@ -51,11 +59,8 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
         channels: ["mobile_money"],
         label: `${quantity} vote(s) for ${contestant.name}`,
         callback_url: callbackUrl,
-        onClose: function () {
-          setPaying(false);
-        },
+        onClose: function () { setPaying(false); },
         callback: function (response: { reference: string }) {
-          // fires on desktop/browser — verify inline and show overlay
           fetch("/api/payment/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -65,7 +70,11 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
             .then((data) => {
               setPaying(false);
               if (data.ok) {
-                onVoted?.(contestant.name, quantity, contestant.photoUrl ?? null);
+                setVoted(true);
+                onSelect(); // close the picker
+                onVoted?.();
+                // Reset voted badge after 6 seconds
+                setTimeout(() => setVoted(false), 6000);
               } else {
                 setErrorMsg(data.error || "Vote failed. Try again.");
               }
@@ -73,7 +82,6 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
             .catch(() => { setPaying(false); setErrorMsg("Vote failed. Contact admin."); });
         },
       });
-
       handler.openIframe();
     } catch (err: any) {
       setPaying(false);
@@ -84,10 +92,13 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
   return (
     <div
       className={`flex flex-col overflow-hidden rounded-2xl transition-all duration-200 ${
-        isOpen ? "ring-2 ring-yellow-400 shadow-yellow-400/20 shadow-lg" : "hover:-translate-y-1 hover:ring-1 hover:ring-yellow-400/40 hover:shadow-lg"
+        voted ? "ring-2 ring-green-400 shadow-green-400/20 shadow-lg" :
+        isOpen ? "ring-2 ring-yellow-400 shadow-yellow-400/20 shadow-lg" :
+        "hover:-translate-y-1 hover:ring-1 hover:ring-yellow-400/40 hover:shadow-lg"
       }`}
       style={{ background: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(8px)" }}
     >
+      {/* Photo */}
       <div className="relative" style={{ paddingBottom: "100%" }}>
         <div className="absolute inset-0 bg-gradient-to-br from-green-950 to-black flex items-center justify-center overflow-hidden">
           {contestant.photoUrl ? (
@@ -95,19 +106,32 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
           ) : (
             <span className="text-6xl font-extrabold text-yellow-400/60 select-none">{initial}</span>
           )}
+          {/* Code badge */}
           {contestant.code && (
             <div className="absolute top-2 left-2 rounded-lg px-2 py-0.5 text-xs font-extrabold text-gray-900"
               style={{ background: "linear-gradient(90deg,#facc15,#f59e0b)" }}>
               {contestant.code}
             </div>
           )}
+          {/* Green voted overlay on photo */}
+          {voted && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center"
+              style={{ background: "rgba(34,197,94,0.75)" }}>
+              <svg className="w-12 h-12 text-white mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="text-white font-extrabold text-base tracking-wide">VOTED!</span>
+            </div>
+          )}
         </div>
       </div>
 
+      {/* Info */}
       <div className="p-3 flex flex-col gap-2 flex-1">
         <h3 className="font-bold text-white text-sm leading-tight">{contestant.name}</h3>
 
-        {isOpen && (
+        {/* Quantity picker */}
+        {isOpen && !voted && (
           <form onSubmit={handlePay} className="flex flex-col gap-2">
             <div className="flex items-center justify-between rounded-xl px-2 py-1.5"
               style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)" }}>
@@ -134,11 +158,17 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted }
           </form>
         )}
 
+        {/* Vote / Voted button */}
         {!isOpen && (
-          <button onClick={handleVoteClick}
-            className="mt-auto py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95"
-            style={{ background: "linear-gradient(90deg,#facc15,#f59e0b)", color: "#111", boxShadow: "0 2px 12px rgba(250,204,21,0.25)" }}>
-            Vote - GHS 1
+          <button
+            onClick={voted ? undefined : handleVoteClick}
+            disabled={voted}
+            className="mt-auto py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 disabled:cursor-default"
+            style={voted
+              ? { background: "#22c55e", color: "white" }
+              : { background: "linear-gradient(90deg,#facc15,#f59e0b)", color: "#111", boxShadow: "0 2px 12px rgba(250,204,21,0.25)" }
+            }>
+            {voted ? "✓ Voted!" : "Vote - GHS 1"}
           </button>
         )}
       </div>
