@@ -33,7 +33,7 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
 
   async function handlePay(e: React.FormEvent) {
     e.preventDefault();
-    if (paying) return;
+    if (paying) return; // hard guard against double-tap
     setPaying(true);
     setErrorMsg("");
     try {
