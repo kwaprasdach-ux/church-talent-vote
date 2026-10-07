@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Contestant not found" }, { status: 404 });
   }
 
-  const reference = `vote_${contestantId}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  const reference = `vote_${Date.now()}_${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
 
   const paystackRes = await fetch("https://api.paystack.co/transaction/initialize", {
     method: "POST",
