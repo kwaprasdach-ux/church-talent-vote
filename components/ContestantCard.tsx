@@ -50,7 +50,7 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
 
       await loadPaystackScript();
 
-      const key = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_live_452dfb5370fd3c017bee297667d05aad90e59726";
+      const key = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_test_9fbc71ffef8a91b27d9ea23af5bb234c8a278175";
       const callbackUrl = `${window.location.origin}/api/payment/verify`;
 
       const handler = (window as any).PaystackPop.setup({
@@ -203,4 +203,5 @@ function loadPaystackScript(): Promise<void> {
     document.body.appendChild(script);
   });
 }
+
 
