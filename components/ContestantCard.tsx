@@ -213,8 +213,3 @@ function loadPaystackScript(): Promise<void> {
     document.body.appendChild(script);
   });
 }
-
-
-
-
-
