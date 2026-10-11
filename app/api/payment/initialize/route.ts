@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Payment not configured" }, { status: 500 });
     }
 
-    // Guaranteed unique reference every time — timestamp + UUID fragment
+    // Guaranteed unique reference every time â€” timestamp + UUID fragment
     const reference = `adyots_${Date.now()}_${crypto.randomUUID().replace(/-/g, "")}`;
 
     const paystackRes = await fetch("https://api.paystack.co/transaction/initialize", {
@@ -67,3 +67,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to start payment" }, { status: 500 });
   }
 }
+
