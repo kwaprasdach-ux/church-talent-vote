@@ -191,9 +191,10 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
 
 function loadPaystackScript(): Promise<void> {
   return new Promise((resolve, reject) => {
-    if ((window as any).PaystackPop) return resolve();
+    // Always remove old script and reload fresh to avoid stuck state
     const existing = document.getElementById("paystack-script");
-    if (existing) { existing.addEventListener("load", () => resolve()); return; }
+    if (existing) existing.remove();
+    delete (window as any).PaystackPop;
     const script = document.createElement("script");
     script.id = "paystack-script";
     script.src = "https://js.paystack.co/v1/inline.js";
@@ -203,6 +204,16 @@ function loadPaystackScript(): Promise<void> {
     document.body.appendChild(script);
   });
 }
+    const script = document.createElement("script");
+    script.id = "paystack-script";
+    script.src = "https://js.paystack.co/v1/inline.js";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load Paystack"));
+    document.body.appendChild(script);
+  });
+}
+
 
 
 
