@@ -1,38 +1,26 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { contestantId, quantity = 1 } = body;
-
-    if (!contestantId || typeof contestantId !== "string") {
-      return NextResponse.json({ error: "contestantId is required" }, { status: 400 });
-    }
-
+    if (!contestantId) return NextResponse.json({ error: "contestantId is required" }, { status: 400 });
     const qty = Math.max(1, Math.min(50, Number(quantity) || 1));
-
     const contestant = await prisma.contestant.findUnique({ where: { id: contestantId } });
-    if (!contestant) {
-      return NextResponse.json({ error: "Contestant not found" }, { status: 404 });
-    }
+    if (!contestant) return NextResponse.json({ error: "Contestant not found" }, { status: 404 });
+    if (!process.env.PAYSTACK_SECRET_KEY) return NextResponse.json({ error: "Payment not configured" }, { status: 500 });
 
-    if (!process.env.PAYSTACK_SECRET_KEY) {
-      return NextResponse.json({ error: "Payment not configured" }, { status: 500 });
-    }
+    const ts = Date.now();
+    const uid = crypto.randomUUID().replace(/-/g, "").slice(0, 12);
+    const reference = "adyots_" + ts + "_" + uid;
+    const email = "voter" + ts + "@adyots.com";
 
-    // Secure unique reference: adyots + timestamp + crypto UUID
-    const uuid = crypto.randomUUID().replace(/-/g, "");
-    const reference = "adyots_" + Date.now() + "_" + uuid;
-
-    const paystackRes = await fetch("https://api.paystack.co/transaction/initialize", {
+    const res = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",
-      headers: {
-        Authorization: "Bearer " + process.env.PAYSTACK_SECRET_KEY,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: "Bearer " + process.env.PAYSTACK_SECRET_KEY, "Content-Type": "application/json" },
       body: JSON.stringify({
-        email: "voter_" + Date.now() + "_" + uuid.slice(0, 8) + "@adyots.com",
+        email,
         amount: qty * 100,
         currency: "GHS",
         reference,
@@ -49,21 +37,15 @@ export async function POST(req: NextRequest) {
       }),
     });
 
-    const data = await paystackRes.json();
+    const data = await res.json();
+    if (!data.status) return NextResponse.json({ error: data.message || "Payment initialization failed" }, { status: 500 });
 
-    if (!data.status) {
-      console.error("Paystack init error:", data.message);
-      return NextResponse.json({ error: data.message || "Payment initialization failed" }, { status: 500 });
-    }
-
-    const uniqueEmail = "voter_" + Date.now() + "_" + uuid.slice(0, 8) + "@adyots.com";
     return NextResponse.json({
-      authorization_url: data.data.authorization_url,
       reference: data.data.reference,
-      email: uniqueEmail,
+      accessCode: data.data.access_code,
+      email,
     });
   } catch (err: any) {
-    console.error("Payment initialize error:", err);
     return NextResponse.json({ error: "Failed to start payment" }, { status: 500 });
   }
 }
