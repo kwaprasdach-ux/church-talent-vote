@@ -1,18 +1,9 @@
 ﻿"use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 
 type Contestant = { id: string; name: string; code?: string | null; act: string | null; photoUrl: string | null; votes: number; };
-
-type Props = {
-  contestant: Contestant;
-  isOpen: boolean;
-  onSelect: () => void;
-  onVoted?: () => void;
-  onPayingStart?: () => void;
-  onPayingEnd?: () => void;
-  startVoted?: boolean;
-};
+type Props = { contestant: Contestant; isOpen: boolean; onSelect: () => void; onVoted?: () => void; onPayingStart?: () => void; onPayingEnd?: () => void; startVoted?: boolean; };
 
 const PAYSTACK_KEY = "pk_live_452dfb5370fd3c017bee297667d05aad90e59726";
 
@@ -21,20 +12,22 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
   const [voted, setVoted] = useState(startVoted);
   const [quantity, setQuantity] = useState(1);
   const [errorMsg, setErrorMsg] = useState("");
+  const payingRef = useRef(false);
 
   useEffect(() => {
     if (startVoted) { setVoted(true); setTimeout(() => setVoted(false), 6000); }
   }, [startVoted]);
 
   const initial = contestant.name.charAt(0).toUpperCase();
-
   function handleVoteClick() { setQuantity(1); setErrorMsg(""); onSelect(); }
   function decrement() { setQuantity((q) => Math.max(1, q - 1)); }
   function increment() { setQuantity((q) => Math.min(50, q + 1)); }
 
   async function handlePay(e: React.FormEvent) {
     e.preventDefault();
-    if (paying) return;
+    e.stopPropagation();
+    if (payingRef.current) return;
+    payingRef.current = true;
     setPaying(true);
     onPayingStart?.();
     setErrorMsg("");
@@ -58,7 +51,7 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
         channels: ["mobile_money"],
         label: quantity + " vote(s) for " + contestant.name,
         callback_url: "https://church-talent-vote.vercel.app/api/payment/verify",
-        onClose: function () { setPaying(false); onPayingEnd?.(); },
+        onClose: function () { payingRef.current = false; setPaying(false); onPayingEnd?.(); },
         callback: function (response: { reference: string }) {
           fetch("/api/payment/verify", {
             method: "POST",
@@ -67,16 +60,18 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
           })
             .then((r) => r.json())
             .then((data) => {
+              payingRef.current = false;
               setPaying(false);
               onPayingEnd?.();
               if (data.ok) { setVoted(true); onSelect(); onVoted?.(); setTimeout(() => setVoted(false), 6000); }
               else { setErrorMsg(data.error || "Vote failed. Try again."); setTimeout(() => setErrorMsg(""), 5000); }
             })
-            .catch(() => { setPaying(false); onPayingEnd?.(); setErrorMsg("Network error. Please try again."); setTimeout(() => setErrorMsg(""), 5000); });
+            .catch(() => { payingRef.current = false; setPaying(false); onPayingEnd?.(); setErrorMsg("Network error. Please try again."); setTimeout(() => setErrorMsg(""), 5000); });
         },
       });
       handler.openIframe();
     } catch (err: any) {
+      payingRef.current = false;
       setPaying(false);
       onPayingEnd?.();
       setErrorMsg(err.message || "Something went wrong. Please try again.");
