@@ -3,12 +3,34 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 
-type Contestant = { id: string; name: string; code?: string | null; act: string | null; photoUrl: string | null; votes: number; };
-type Props = { contestant: Contestant; isOpen: boolean; onSelect: () => void; onVoted?: () => void; onPayingStart?: () => void; onPayingEnd?: () => void; startVoted?: boolean; };
+type Contestant = {
+  id: string;
+  name: string;
+  code?: string | null;
+  act: string | null;
+  photoUrl: string | null;
+  votes: number;
+};
 
-const PAYSTACK_KEY = "pk_live_452dfb5370fd3c017bee297667d05aad90e59726";
+type Props = {
+  contestant: Contestant;
+  isOpen: boolean;
+  onSelect: () => void;
+  onVoted?: () => void;
+  onPayingStart?: () => void;
+  onPayingEnd?: () => void;
+  startVoted?: boolean;
+};
 
-export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, onPayingStart, onPayingEnd, startVoted = false }: Props) {
+export default function ContestantCard({
+  contestant,
+  isOpen,
+  onSelect,
+  onVoted,
+  onPayingStart,
+  onPayingEnd,
+  startVoted = false,
+}: Props) {
   const [paying, setPaying] = useState(false);
   const [voted, setVoted] = useState(startVoted);
   const [quantity, setQuantity] = useState(1);
@@ -16,13 +38,25 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
   const payingRef = useRef(false);
 
   useEffect(() => {
-    if (startVoted) { setVoted(true); setTimeout(() => setVoted(false), 6000); }
+    if (startVoted) {
+      setVoted(true);
+      setTimeout(() => setVoted(false), 6000);
+    }
   }, [startVoted]);
 
   const initial = contestant.name.charAt(0).toUpperCase();
-  function handleVoteClick() { setQuantity(1); setErrorMsg(""); onSelect(); }
-  function decrement() { setQuantity((q) => Math.max(1, q - 1)); }
-  function increment() { setQuantity((q) => Math.min(50, q + 1)); }
+
+  function handleVoteClick() {
+    setQuantity(1);
+    setErrorMsg("");
+    onSelect();
+  }
+  function decrement() {
+    setQuantity((q) => Math.max(1, q - 1));
+  }
+  function increment() {
+    setQuantity((q) => Math.min(50, q + 1));
+  }
 
   async function handlePay(e: React.FormEvent) {
     e.preventDefault();
@@ -33,8 +67,15 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
     onPayingStart?.();
     setErrorMsg("");
 
-    const reset = () => { payingRef.current = false; setPaying(false); onPayingEnd?.(); };
-    const showError = (msg: string) => { setErrorMsg(msg); setTimeout(() => setErrorMsg(""), 5000); };
+    const reset = () => {
+      payingRef.current = false;
+      setPaying(false);
+      onPayingEnd?.();
+    };
+    const showError = (msg: string) => {
+      setErrorMsg(msg);
+      setTimeout(() => setErrorMsg(""), 5000);
+    };
 
     try {
       const initRes = await fetch("/api/payment/initialize", {
@@ -59,93 +100,185 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
             .then((data) => {
               reset();
               if (data.ok) {
-                setVoted(true); onSelect(); onVoted?.();
+                setVoted(true);
+                onSelect();
+                onVoted?.();
                 setTimeout(() => setVoted(false), 6000);
               } else {
                 showError(data.error || "Vote failed. Try again.");
               }
             })
-            .catch(() => { reset(); showError("Network error. Please try again."); });
+            .catch(() => {
+              reset();
+              showError("Network error. Please try again.");
+            });
         },
         onCancel: () => reset(),
-        onError: (err: { message?: string }) => { reset(); showError(err?.message || "Payment error. Try again."); },
+        onError: (err: { message?: string }) => {
+          reset();
+          showError(err?.message || "Payment error. Try again.");
+        },
       });
     } catch (err: any) {
       reset();
       showError(err.message || "Something went wrong. Please try again.");
     }
+  } // <-- handlePay closes here
 
-    return (
-      <div className={"flex flex-col overflow-hidden rounded-2xl transition-all duration-200 " + (voted ? "ring-2 ring-green-400 shadow-green-400/20 shadow-lg" : isOpen ? "ring-2 ring-yellow-400 shadow-yellow-400/20 shadow-lg" : "hover:-translate-y-1 hover:ring-1 hover:ring-yellow-400/40 hover:shadow-lg")}
-        style={{ background: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(8px)" }}>
-        <div className="relative" style={{ paddingBottom: "100%" }}>
-          <div className="absolute inset-0 bg-gradient-to-br from-green-950 to-black flex items-center justify-center overflow-hidden">
-            {contestant.photoUrl ? (
-              <Image src={contestant.photoUrl} alt={contestant.name} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover object-top" />
-            ) : (
-              <span className="text-6xl font-extrabold text-yellow-400/60 select-none">{initial}</span>
-            )}
-            {contestant.code && (
-              <div className="absolute top-2 left-2 rounded-lg px-2 py-0.5 text-xs font-extrabold text-gray-900" style={{ background: "linear-gradient(90deg,#facc15,#f59e0b)" }}>
-                {contestant.code}
-              </div>
-            )}
-            {voted && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ background: "rgba(34,197,94,0.75)" }}>
-                <svg className="w-12 h-12 text-white mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-white font-extrabold text-base tracking-wide">VOTED!</span>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="p-3 flex flex-col gap-2 flex-1">
-          <h3 className="font-bold text-white text-sm leading-tight">{contestant.name}</h3>
-          {isOpen && !voted && (
-            <form onSubmit={handlePay} className="flex flex-col gap-2">
-              <div className="flex items-center justify-between rounded-xl px-2 py-1.5" style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                <button type="button" onClick={decrement} className="w-8 h-8 rounded-lg bg-white/10 text-white font-bold text-lg flex items-center justify-center hover:bg-yellow-400/20 transition active:scale-90">-</button>
-                <div className="text-center">
-                  <p className="text-lg font-extrabold text-yellow-400">{quantity}</p>
-                  <p className="text-xs text-white/30">vote{quantity > 1 ? "s" : ""}</p>
-                </div>
-                <button type="button" onClick={increment} className="w-8 h-8 rounded-lg bg-white/10 text-white font-bold text-lg flex items-center justify-center hover:bg-yellow-400/20 transition active:scale-90">+</button>
-              </div>
-              <div className="flex items-center justify-between px-1">
-                <span className="text-xs text-white/40">Total</span>
-                <span className="text-sm font-extrabold text-yellow-400">GHS {quantity}.00</span>
-              </div>
-              {errorMsg && <p className="text-xs text-red-400">{errorMsg}</p>}
-              <div className="flex gap-1.5">
-                <button type="submit" disabled={paying} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-gray-900 active:scale-95 transition disabled:opacity-60" style={{ background: "linear-gradient(90deg,#facc15,#f59e0b)" }}>
-                  {paying ? "Opening..." : "Pay GHS " + quantity + ".00"}
-                </button>
-                <button type="button" onClick={onSelect} className="w-10 text-white/30 hover:text-white border border-white/10 rounded-xl text-sm font-bold transition">X</button>
-              </div>
-            </form>
+  return (
+    <div
+      className={
+        "flex flex-col overflow-hidden rounded-2xl transition-all duration-200 " +
+        (voted
+          ? "ring-2 ring-green-400 shadow-green-400/20 shadow-lg"
+          : isOpen
+            ? "ring-2 ring-yellow-400 shadow-yellow-400/20 shadow-lg"
+            : "hover:-translate-y-1 hover:ring-1 hover:ring-yellow-400/40 hover:shadow-lg")
+      }
+      style={{
+        background: "rgba(0,0,0,0.55)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        backdropFilter: "blur(8px)",
+      }}
+    >
+      <div className="relative" style={{ paddingBottom: "100%" }}>
+        <div className="absolute inset-0 bg-gradient-to-br from-green-950 to-black flex items-center justify-center overflow-hidden">
+          {contestant.photoUrl ? (
+            <Image
+              src={contestant.photoUrl}
+              alt={contestant.name}
+              fill
+              sizes="(max-width: 640px) 50vw, 25vw"
+              className="object-cover object-top"
+            />
+          ) : (
+            <span className="text-6xl font-extrabold text-yellow-400/60 select-none">{initial}</span>
           )}
-          {!isOpen && (
-            <button onClick={voted ? undefined : handleVoteClick} disabled={voted}
-              className="mt-auto py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 disabled:cursor-default"
-              style={voted ? { background: "#22c55e", color: "white" } : { background: "linear-gradient(90deg,#facc15,#f59e0b)", color: "#111", boxShadow: "0 2px 12px rgba(250,204,21,0.25)" }}>
-              {voted ? "Voted!" : "Vote - GHS 1"}
-            </button>
+          {contestant.code && (
+            <div
+              className="absolute top-2 left-2 rounded-lg px-2 py-0.5 text-xs font-extrabold text-gray-900"
+              style={{ background: "linear-gradient(90deg,#facc15,#f59e0b)" }}
+            >
+              {contestant.code}
+            </div>
+          )}
+          {voted && (
+            <div
+              className="absolute inset-0 flex flex-col items-center justify-center"
+              style={{ background: "rgba(34,197,94,0.75)" }}
+            >
+              <svg
+                className="w-12 h-12 text-white mb-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="text-white font-extrabold text-base tracking-wide">VOTED!</span>
+            </div>
           )}
         </div>
       </div>
-    );
-  }
 
-  function loadPaystackScript(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if ((window as any).PaystackPop) return resolve();
-      const script = document.createElement("script");
-      script.src = "https://js.paystack.co/v2/inline.js";
-      script.async = true;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error("Failed to load Paystack"));
-      document.body.appendChild(script);
-    });
-  }
+      <div className="p-3 flex flex-col gap-2 flex-1">
+        <h3 className="font-bold text-white text-sm leading-tight">{contestant.name}</h3>
 
+        {isOpen && !voted && (
+          <form onSubmit={handlePay} className="flex flex-col gap-2">
+            <div
+              className="flex items-center justify-between rounded-xl px-2 py-1.5"
+              style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)" }}
+            >
+              <button
+                type="button"
+                onClick={decrement}
+                className="w-8 h-8 rounded-lg bg-white/10 text-white font-bold text-lg flex items-center justify-center hover:bg-yellow-400/20 transition active:scale-90"
+              >
+                -
+              </button>
+              <div className="text-center">
+                <p className="text-lg font-extrabold text-yellow-400">{quantity}</p>
+                <p className="text-xs text-white/30">vote{quantity > 1 ? "s" : ""}</p>
+              </div>
+              <button
+                type="button"
+                onClick={increment}
+                className="w-8 h-8 rounded-lg bg-white/10 text-white font-bold text-lg flex items-center justify-center hover:bg-yellow-400/20 transition active:scale-90"
+              >
+                +
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between px-1">
+              <span className="text-xs text-white/40">Total</span>
+              <span className="text-sm font-extrabold text-yellow-400">GHS {quantity}.00</span>
+            </div>
+
+            {errorMsg && <p className="text-xs text-red-400">{errorMsg}</p>}
+
+            <div className="flex gap-1.5">
+              <button
+                type="submit"
+                disabled={paying}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold text-gray-900 active:scale-95 transition disabled:opacity-60"
+                style={{ background: "linear-gradient(90deg,#facc15,#f59e0b)" }}
+              >
+                {paying ? "Opening..." : "Pay GHS " + quantity + ".00"}
+              </button>
+              <button
+                type="button"
+                onClick={onSelect}
+                className="w-10 text-white/30 hover:text-white border border-white/10 rounded-xl text-sm font-bold transition"
+              >
+                X
+              </button>
+            </div>
+          </form>
+        )}
+
+        {!isOpen && (
+          <button
+            onClick={voted ? undefined : handleVoteClick}
+            disabled={voted}
+            className="mt-auto py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 disabled:cursor-default"
+            style={
+              voted
+                ? { background: "#22c55e", color: "white" }
+                : {
+                  background: "linear-gradient(90deg,#facc15,#f59e0b)",
+                  color: "#111",
+                  boxShadow: "0 2px 12px rgba(250,204,21,0.25)",
+                }
+            }
+          >
+            {voted ? "Voted!" : "Vote - GHS 1"}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+} // <-- component closes here
+
+function loadPaystackScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const w = window as any;
+    const existing = document.getElementById("paystack-script-v2");
+
+    // Already loaded the V2 script: reuse it
+    if (existing && w.PaystackPop) return resolve();
+
+    // Clean up a stale V1 script/global if one was loaded earlier in this session
+    document.getElementById("paystack-script")?.remove();
+    if (!existing) delete w.PaystackPop;
+
+    const script = document.createElement("script");
+    script.id = "paystack-script-v2";
+    script.src = "https://js.paystack.co/v2/inline.js";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load Paystack"));
+    document.body.appendChild(script);
+  });
+}
