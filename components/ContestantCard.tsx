@@ -50,7 +50,7 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
         ref: initData.reference,
         channels: ["mobile_money"],
         label: quantity + " vote(s) for " + contestant.name,
-        callback_url: "https://church-talent-vote.vercel.app/api/payment/verify",
+        
         onClose: function () { payingRef.current = false; setPaying(false); onPayingEnd?.(); },
         callback: function (response: { reference: string }) {
           fetch("/api/payment/verify", {
@@ -155,3 +155,4 @@ function loadPaystackScript(): Promise<void> {
     document.body.appendChild(script);
   });
 }
+
