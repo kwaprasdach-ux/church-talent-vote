@@ -56,13 +56,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: data.message || "Payment initialization failed" }, { status: 500 });
     }
 
+    const uniqueEmail = "voter_" + Date.now() + "_" + uuid.slice(0, 8) + "@adyots.com";
     return NextResponse.json({
       authorization_url: data.data.authorization_url,
       reference: data.data.reference,
+      email: uniqueEmail,
     });
   } catch (err: any) {
     console.error("Payment initialize error:", err);
     return NextResponse.json({ error: "Failed to start payment" }, { status: 500 });
   }
 }
+
 
