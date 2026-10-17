@@ -21,18 +21,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Payment not configured" }, { status: 500 });
     }
 
-    // Guaranteed unique reference every time â€” timestamp + UUID fragment
-    const reference = "adyots_" + Date.now() + "_" + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    // Secure unique reference: adyots + timestamp + crypto UUID
+    const uuid = crypto.randomUUID().replace(/-/g, "");
+    const reference = "adyots_" + Date.now() + "_" + uuid;
 
     const paystackRes = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        Authorization: "Bearer " + process.env.PAYSTACK_SECRET_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: "voter_" + Date.now() + "@adyots.com",
-        amount: qty * 100, // GHS in pesewas
+        email: "voter_" + Date.now() + "_" + uuid.slice(0, 8) + "@adyots.com",
+        amount: qty * 100,
         currency: "GHS",
         reference,
         channels: ["mobile_money"],
@@ -52,10 +53,7 @@ export async function POST(req: NextRequest) {
 
     if (!data.status) {
       console.error("Paystack init error:", data.message);
-      return NextResponse.json(
-        { error: data.message || "Payment initialization failed" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: data.message || "Payment initialization failed" }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -67,6 +65,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to start payment" }, { status: 500 });
   }
 }
-
-
-
