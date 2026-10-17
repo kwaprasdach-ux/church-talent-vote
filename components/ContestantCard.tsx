@@ -55,7 +55,7 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
 
       const handler = (window as any).PaystackPop.setup({
         key,
-        email: "votes@adyots.com",
+        email: "voter_" + Date.now() + "@adyots.com",
         amount: quantity * 100,
         currency: "GHS",
         ref: initData.reference,
@@ -213,3 +213,4 @@ function loadPaystackScript(): Promise<void> {
     document.body.appendChild(script);
   });
 }
+

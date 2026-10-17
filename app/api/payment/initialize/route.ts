@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: "votes@adyots.com",
+        email: "voter_" + Date.now() + "@adyots.com",
         amount: qty * 100, // GHS in pesewas
         currency: "GHS",
         reference,
@@ -67,4 +67,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to start payment" }, { status: 500 });
   }
 }
+
 
