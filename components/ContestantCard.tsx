@@ -14,19 +14,18 @@ type Props = {
   startVoted?: boolean;
 };
 
+const PAYSTACK_KEY = "pk_live_452dfb5370fd3c017bee297667d05aad90e59726";
+
 export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, onPayingStart, onPayingEnd, startVoted = false }: Props) {
   const [paying, setPaying] = useState(false);
   const [voted, setVoted] = useState(startVoted);
   const [quantity, setQuantity] = useState(1);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // If startVoted changes to true (redirect flow), show voted state
   useEffect(() => {
-    if (startVoted) {
-      setVoted(true);
-      setTimeout(() => setVoted(false), 6000);
-    }
+    if (startVoted) { setVoted(true); setTimeout(() => setVoted(false), 6000); }
   }, [startVoted]);
+
   const initial = contestant.name.charAt(0).toUpperCase();
 
   function handleVoteClick() { setQuantity(1); setErrorMsg(""); onSelect(); }
@@ -35,7 +34,7 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
 
   async function handlePay(e: React.FormEvent) {
     e.preventDefault();
-    if (paying) return; // hard guard against double-tap
+    if (paying) return;
     setPaying(true);
     onPayingStart?.();
     setErrorMsg("");
@@ -50,18 +49,15 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
 
       await loadPaystackScript();
 
-      const key = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "pk_live_452dfb5370fd3c017bee297667d05aad90e59726";
-      const callbackUrl = `${window.location.origin}/api/payment/verify`;
-
       const handler = (window as any).PaystackPop.setup({
-        key,
+        key: PAYSTACK_KEY,
         email: "voter_" + Date.now() + "@adyots.com",
         amount: quantity * 100,
         currency: "GHS",
         ref: initData.reference,
         channels: ["mobile_money"],
-        label: `${quantity} vote(s) for ${contestant.name}`,
-        callback_url: callbackUrl,
+        label: quantity + " vote(s) for " + contestant.name,
+        callback_url: "https://church-talent-vote.vercel.app/api/payment/verify",
         onClose: function () { setPaying(false); onPayingEnd?.(); },
         callback: function (response: { reference: string }) {
           fetch("/api/payment/verify", {
@@ -72,25 +68,11 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
             .then((r) => r.json())
             .then((data) => {
               setPaying(false);
-              if (data.ok) {
-                setVoted(true);
-                onSelect();
-                onVoted?.();
-                onPayingEnd?.();
-                setTimeout(() => setVoted(false), 6000);
-              } else {
-                setPaying(false);
-                onPayingEnd?.();
-                setErrorMsg(data.error || "Vote failed. Try again.");
-                setTimeout(() => setErrorMsg(""), 5000);
-              }
-            })
-            .catch(() => {
-              setPaying(false);
               onPayingEnd?.();
-              setErrorMsg("Network error. Please try again.");
-              setTimeout(() => setErrorMsg(""), 5000);
-            });
+              if (data.ok) { setVoted(true); onSelect(); onVoted?.(); setTimeout(() => setVoted(false), 6000); }
+              else { setErrorMsg(data.error || "Vote failed. Try again."); setTimeout(() => setErrorMsg(""), 5000); }
+            })
+            .catch(() => { setPaying(false); onPayingEnd?.(); setErrorMsg("Network error. Please try again."); setTimeout(() => setErrorMsg(""), 5000); });
         },
       });
       handler.openIframe();
@@ -103,15 +85,8 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
   }
 
   return (
-    <div
-      className={`flex flex-col overflow-hidden rounded-2xl transition-all duration-200 ${
-        voted ? "ring-2 ring-green-400 shadow-green-400/20 shadow-lg" :
-        isOpen ? "ring-2 ring-yellow-400 shadow-yellow-400/20 shadow-lg" :
-        "hover:-translate-y-1 hover:ring-1 hover:ring-yellow-400/40 hover:shadow-lg"
-      }`}
-      style={{ background: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(8px)" }}
-    >
-      {/* Photo */}
+    <div className={"flex flex-col overflow-hidden rounded-2xl transition-all duration-200 " + (voted ? "ring-2 ring-green-400 shadow-green-400/20 shadow-lg" : isOpen ? "ring-2 ring-yellow-400 shadow-yellow-400/20 shadow-lg" : "hover:-translate-y-1 hover:ring-1 hover:ring-yellow-400/40 hover:shadow-lg")}
+      style={{ background: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(8px)" }}>
       <div className="relative" style={{ paddingBottom: "100%" }}>
         <div className="absolute inset-0 bg-gradient-to-br from-green-950 to-black flex items-center justify-center overflow-hidden">
           {contestant.photoUrl ? (
@@ -119,17 +94,13 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
           ) : (
             <span className="text-6xl font-extrabold text-yellow-400/60 select-none">{initial}</span>
           )}
-          {/* Code badge */}
           {contestant.code && (
-            <div className="absolute top-2 left-2 rounded-lg px-2 py-0.5 text-xs font-extrabold text-gray-900"
-              style={{ background: "linear-gradient(90deg,#facc15,#f59e0b)" }}>
+            <div className="absolute top-2 left-2 rounded-lg px-2 py-0.5 text-xs font-extrabold text-gray-900" style={{ background: "linear-gradient(90deg,#facc15,#f59e0b)" }}>
               {contestant.code}
             </div>
           )}
-          {/* Green voted overlay on photo */}
           {voted && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center"
-              style={{ background: "rgba(34,197,94,0.75)" }}>
+            <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ background: "rgba(34,197,94,0.75)" }}>
               <svg className="w-12 h-12 text-white mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
@@ -138,17 +109,12 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
           )}
         </div>
       </div>
-
-      {/* Info */}
       <div className="p-3 flex flex-col gap-2 flex-1">
         <h3 className="font-bold text-white text-sm leading-tight">{contestant.name}</h3>
-
-        {/* Quantity picker */}
         {isOpen && !voted && (
           <form onSubmit={handlePay} className="flex flex-col gap-2">
-            <div className="flex items-center justify-between rounded-xl px-2 py-1.5"
-              style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)" }}>
-              <button type="button" onClick={decrement} className="w-8 h-8 rounded-lg bg-white/10 text-white font-bold text-lg flex items-center justify-center hover:bg-yellow-400/20 transition active:scale-90">−</button>
+            <div className="flex items-center justify-between rounded-xl px-2 py-1.5" style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)" }}>
+              <button type="button" onClick={decrement} className="w-8 h-8 rounded-lg bg-white/10 text-white font-bold text-lg flex items-center justify-center hover:bg-yellow-400/20 transition active:scale-90">-</button>
               <div className="text-center">
                 <p className="text-lg font-extrabold text-yellow-400">{quantity}</p>
                 <p className="text-xs text-white/30">vote{quantity > 1 ? "s" : ""}</p>
@@ -161,27 +127,18 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
             </div>
             {errorMsg && <p className="text-xs text-red-400">{errorMsg}</p>}
             <div className="flex gap-1.5">
-              <button type="submit" disabled={paying}
-                className="flex-1 py-2.5 rounded-xl text-sm font-bold text-gray-900 active:scale-95 transition disabled:opacity-60"
-                style={{ background: "linear-gradient(90deg,#facc15,#f59e0b)" }}>
-                {paying ? "Opening…" : `Pay GHS ${quantity}.00`}
+              <button type="submit" disabled={paying} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-gray-900 active:scale-95 transition disabled:opacity-60" style={{ background: "linear-gradient(90deg,#facc15,#f59e0b)" }}>
+                {paying ? "Opening..." : "Pay GHS " + quantity + ".00"}
               </button>
-              <button type="button" onClick={onSelect} className="w-10 text-white/30 hover:text-white border border-white/10 rounded-xl text-sm font-bold transition">✕</button>
+              <button type="button" onClick={onSelect} className="w-10 text-white/30 hover:text-white border border-white/10 rounded-xl text-sm font-bold transition">X</button>
             </div>
           </form>
         )}
-
-        {/* Vote / Voted button */}
         {!isOpen && (
-          <button
-            onClick={voted ? undefined : handleVoteClick}
-            disabled={voted}
+          <button onClick={voted ? undefined : handleVoteClick} disabled={voted}
             className="mt-auto py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 disabled:cursor-default"
-            style={voted
-              ? { background: "#22c55e", color: "white" }
-              : { background: "linear-gradient(90deg,#facc15,#f59e0b)", color: "#111", boxShadow: "0 2px 12px rgba(250,204,21,0.25)" }
-            }>
-            {voted ? "✓ Voted!" : "Vote - GHS 1"}
+            style={voted ? { background: "#22c55e", color: "white" } : { background: "linear-gradient(90deg,#facc15,#f59e0b)", color: "#111", boxShadow: "0 2px 12px rgba(250,204,21,0.25)" }}>
+            {voted ? "Voted!" : "Vote - GHS 1"}
           </button>
         )}
       </div>
@@ -191,7 +148,6 @@ export default function ContestantCard({ contestant, isOpen, onSelect, onVoted, 
 
 function loadPaystackScript(): Promise<void> {
   return new Promise((resolve, reject) => {
-    // Always remove old script and reload fresh to avoid stuck state
     const existing = document.getElementById("paystack-script");
     if (existing) existing.remove();
     delete (window as any).PaystackPop;
@@ -204,13 +160,3 @@ function loadPaystackScript(): Promise<void> {
     document.body.appendChild(script);
   });
 }
-    const script = document.createElement("script");
-    script.id = "paystack-script";
-    script.src = "https://js.paystack.co/v1/inline.js";
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Failed to load Paystack"));
-    document.body.appendChild(script);
-  });
-}
-
