@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Guaranteed unique reference every time â€” timestamp + UUID fragment
-    const reference = `adyots_${Date.now()}_${crypto.randomUUID().replace(/-/g, "")}`;
+    const reference = "adyots_" + Date.now() + "_" + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 
     const paystackRes = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",
@@ -67,5 +67,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to start payment" }, { status: 500 });
   }
 }
+
 
 
